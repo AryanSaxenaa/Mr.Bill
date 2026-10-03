@@ -137,6 +137,9 @@
     .page-enter {
       animation: none;
     }
+    .motion-safe-pulse {
+      animation: none;
+    }
   }
   .card-shadow {
     box-shadow:

@@ -28,7 +28,7 @@ function QuoteDeskMock() {
           <span className="size-2.5 rounded-full bg-amber-400/90" />
           <span className="size-2.5 rounded-full bg-emerald-400/90" />
         </div>
-        <div className="mx-auto max-w-md flex-1 truncate rounded-md bg-surface px-3 py-1 text-center text-xs text-slate-600">
+        <div className="mx-auto max-w-md flex-1 truncate rounded-md bg-surface px-3 py-1 text-center text-xs text-cocoa">
           mrbill.app · Quote desk · ORD-2026-0142
         </div>
       </div>
@@ -39,8 +39,8 @@ function QuoteDeskMock() {
             <p className="text-xs font-medium uppercase tracking-wide text-sage">
               Quote desk
             </p>
-            <p className="font-display text-lg font-semibold text-[#0A2540]">
-              Maadi branch · Friday restock
+            <p className="font-display text-lg font-semibold text-navy">
+              Maison Layla · Maadi · Friday restock
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -57,7 +57,7 @@ function QuoteDeskMock() {
       <div className="overflow-x-auto px-2 pb-3 pt-2 sm:px-4">
         <table className="w-full min-w-[320px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-stripe-border text-xs font-medium text-slate-600">
+            <tr className="border-b border-stripe-border text-xs font-medium text-cocoa">
               <th className="py-2 pr-3 font-medium">Line item</th>
               {suppliers.map((name) => (
                 <th key={name} className="px-2 py-2 text-right font-medium">
@@ -69,7 +69,7 @@ function QuoteDeskMock() {
           <tbody className="text-cocoa">
             {rows.map((row) => (
               <tr key={row.item} className="border-b border-stripe-border/80">
-                <td className="py-2.5 pr-3 font-medium text-[#0A2540]">
+                <td className="py-2.5 pr-3 font-medium text-navy">
                   {row.item}
                 </td>
                 {row.prices.map((price, i) => (
@@ -78,7 +78,7 @@ function QuoteDeskMock() {
                     className={`px-2 py-2.5 text-right tabular-nums ${
                       row.best === i
                         ? "font-semibold text-sage"
-                        : "text-slate-600"
+                        : "text-cocoa"
                     }`}
                   >
                     {price}
@@ -89,8 +89,8 @@ function QuoteDeskMock() {
           </tbody>
           <tfoot>
             <tr>
-              <td className="pt-3 text-xs text-slate-600">Landed total</td>
-              <td className="px-2 pt-3 text-right text-xs text-slate-600">
+              <td className="pt-3 text-xs text-cocoa">Landed total</td>
+              <td className="px-2 pt-3 text-right text-xs text-cocoa">
                 EGP 4,820
               </td>
               <td className="px-2 pt-3 text-right text-xs font-semibold text-sage">
@@ -106,7 +106,7 @@ function QuoteDeskMock() {
 
 export function LandingHero() {
   return (
-    <section className="relative bg-gray-50">
+    <section className="relative bg-surface">
       <PageIllustration />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="pb-12 pt-28 md:pb-20 md:pt-36">
@@ -118,7 +118,7 @@ export function LandingHero() {
                 {TEAM_AVATARS.map((file) => (
                   <Image
                     key={file}
-                    className="box-content rounded-full border-2 border-gray-50"
+                    className="box-content rounded-full border-2 border-surface"
                     src={`/assets/landing/${file}`}
                     width={32}
                     height={32}
@@ -126,22 +126,23 @@ export function LandingHero() {
                   />
                 ))}
               </div>
-              <p className="mt-3 text-sm text-slate-600">
-                Trusted by multi-branch F&amp;B operators in Cairo
+              <p className="mt-3 text-sm text-cocoa">
+                For multi-branch Cairo cafés like Maison Layla
               </p>
             </div>
             <h1
-              className="mb-6 border-y text-5xl font-bold text-[#0A2540] [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-300/.8),transparent)1] md:text-6xl"
+              className="font-display mb-6 border-y text-5xl font-semibold text-navy [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-300/.8),transparent)1] md:text-6xl"
             >
-              The procurement desk your{" "}
+              Chat to vendor to quote —{" "}
               <br className="max-lg:hidden" />
-              cafés already need
+              without the WhatsApp chaos
             </h1>
             <div className="mx-auto max-w-3xl">
-              <p className="mb-8 text-lg text-slate-600">
-                Mr.Bill turns restock notes into structured RFQs, collects supplier
-                quotes in EGP, compares landed cost, and syncs inventory — one
-                order ID from intake to approval.
+              <p className="mb-8 text-lg text-cocoa">
+                Mr.Bill is the order desk for Cairo multi-branch cafés: describe
+                a restock in plain language, discover suppliers, collect quotes in
+                EGP, compare landed cost, and sync inventory — one order ID from
+                intake to approval.
               </p>
               <div className="relative before:absolute before:inset-0 before:border-y before:[border-image:linear-gradient(to_right,transparent,--theme(--color-slate-300/.8),transparent)1]">
                 <div className="mx-auto max-w-xs sm:flex sm:max-w-none sm:justify-center">
@@ -157,7 +158,7 @@ export function LandingHero() {
                     </span>
                   </Link>
                   <Link
-                    className="inline-flex w-full items-center justify-center rounded-lg px-4 py-[11px] text-sm font-medium whitespace-nowrap shadow-lg transition-all bg-white text-[#0A2540] hover:bg-gray-50 sm:ml-4 sm:w-auto"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-stripe-border px-4 py-[11px] text-sm font-medium whitespace-nowrap shadow-lg transition-all bg-linen text-navy hover:bg-surface sm:ml-4 sm:w-auto"
                     href={GITHUB_URL}
                     target="_blank"
                     rel="noopener noreferrer"

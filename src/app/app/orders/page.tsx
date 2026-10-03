@@ -68,7 +68,7 @@ export default function OrdersPage() {
             Orders
           </h1>
           <p className="mt-1 text-cocoa">
-            Request → RFQ → compare landed cost → approve → inventory
+            Cairo branches on one desk — intake, RFQ, landed cost in EGP, approve
           </p>
         </div>
         <Link

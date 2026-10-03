@@ -44,7 +44,7 @@ export function AskMrBillPanel({
       <div className="flex flex-1 flex-col gap-3 p-4">
         {agentMode === "demo" && (
           <p className="rounded-md border border-sage/30 bg-sage/10 px-2 py-1.5 text-xs text-espresso">
-            Demo mode — same tool path as judges; add OpenRouter for live LLM.
+            Demo mode — full order desk flow; connect an AI key for live assistant.
           </p>
         )}
 
@@ -59,8 +59,8 @@ export function AskMrBillPanel({
             role="status"
           >
             {llmNotice.startsWith("deepseek-retry:")
-              ? "Retried with DeepSeek after OpenRouter failure."
-              : `LLM unavailable — demo agent used.`}
+              ? "Retried with backup model after the primary AI was unavailable."
+              : `AI order desk unavailable — demo path used.`}
           </p>
         )}
 

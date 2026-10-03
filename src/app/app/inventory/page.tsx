@@ -29,7 +29,7 @@ export default function InventoryPage() {
           Inventory
         </h1>
         <p className="mt-1 text-cocoa">
-          Branch stock ledger — updates after order approval
+          Maadi, Zamalek, and New Cairo — updates after you approve on the desk
         </p>
       </div>
 

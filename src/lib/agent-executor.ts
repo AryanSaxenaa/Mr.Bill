@@ -202,7 +202,7 @@ export async function executeAgentTool(
       }
 
       const deliveryNote = agentMailEnabled
-        ? `AgentMail sent to ${emailDeliveries.map((d) => d.to).join(", ")}. Sync supplier replies when quotes arrive.`
+        ? `Quote inbox sent to ${emailDeliveries.map((d) => d.to).join(", ")}. Sync supplier replies when quotes arrive.`
         : `Mock supplier replies parsed.`;
 
       return {

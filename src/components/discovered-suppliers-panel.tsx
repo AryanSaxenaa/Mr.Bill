@@ -309,7 +309,7 @@ export function DiscoveredSuppliersPanel({
       </div>
 
       {footnotePowered && (
-        <p className="text-right text-[11px] text-cocoa">Powered by SerpAPI</p>
+        <p className="text-right text-[11px] text-cocoa">Live supplier search</p>
       )}
     </div>
   );

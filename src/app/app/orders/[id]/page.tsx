@@ -303,8 +303,8 @@ export default function OrderDetailPage() {
               </CardTitle>
               <p className="text-sm text-cocoa">
                 {rfqDeliveries?.some((d) => d.mode === "agentmail")
-                  ? "Sent via AgentMail — status and message ids below."
-                  : "Simulated supplier emails from send_rfq (no AgentMail key)."}
+                  ? "Sent from your quote inbox — delivery status and message IDs below."
+                  : "Practice RFQs (quote inbox not connected in this environment)."}
               </p>
             </div>
             {isActive &&
@@ -344,7 +344,7 @@ export default function OrderDetailPage() {
                     </p>
                     <span className="font-mono text-xs text-cocoa">
                       {delivery?.mode === "agentmail"
-                        ? `AgentMail · Sent · ${delivery.messageId}`
+                        ? `Quote inbox · Sent · ${delivery.messageId}`
                         : "EMAIL · OUT (simulated)"}
                     </span>
                   </div>

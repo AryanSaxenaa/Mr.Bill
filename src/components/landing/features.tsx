@@ -64,12 +64,12 @@ function FeatureCard({
   icon: LucideIcon;
 }) {
   return (
-    <article className="rounded-2xl border border-stripe-border bg-white p-6 shadow-sm">
+    <article className="rounded-2xl border border-stripe-border bg-surface p-6 card-shadow">
       <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-indigo-accent/10 text-indigo-accent">
         <Icon className="size-5" aria-hidden />
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-[#0A2540]">{title}</h3>
-      <p className="text-[15px] leading-relaxed text-slate-600">{body}</p>
+      <h3 className="mb-2 font-display text-lg font-semibold text-navy">{title}</h3>
+      <p className="text-[15px] leading-relaxed text-cocoa">{body}</p>
     </article>
   );
 }
@@ -77,19 +77,18 @@ function FeatureCard({
 export function LandingFeatures() {
   return (
     <section
-      id="how-it-works"
-      className="scroll-mt-20 border-t border-stripe-border bg-white"
+      id="product"
+      className="scroll-mt-20 border-t border-stripe-border bg-linen"
     >
-      <div id="product" className="scroll-mt-20" />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="py-12 md:py-20">
           <div className="mx-auto max-w-3xl pb-12 text-center md:pb-16">
-            <h2 className="text-3xl font-bold text-[#0A2540] md:text-4xl">
-              Built for Cairo café restocks, not dev dashboards
+            <h2 className="font-display text-3xl font-semibold text-navy md:text-4xl">
+              Everything your GM needs on one desk
             </h2>
-            <p className="mt-4 text-lg text-slate-600">
-              Discovery, RFQ, compare, and approve on one desk — so Friday
-              restocks do not live in WhatsApp threads and spreadsheets.
+            <p className="mt-4 text-lg text-cocoa">
+              AI order desk, live supplier search, and quote inbox — tuned for
+              Cairo multi-branch cafés, not another generic chatbot shell.
             </p>
           </div>
 

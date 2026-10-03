@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="font-semibold text-navy">Mr.Bill</span>
           </div>
           <p className="text-sm text-cocoa">
-            Procurement on autopilot — RFQ, compare, approve
+            Maison Layla · chat to vendor to quote — no spreadsheet chaos
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button

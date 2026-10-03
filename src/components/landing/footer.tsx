@@ -4,7 +4,7 @@ import { GITHUB_URL } from "./constants";
 
 export function LandingFooter() {
   return (
-    <footer className="bg-gray-50">
+    <footer className="bg-surface">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div
           className="grid gap-10 py-8 sm:grid-cols-12 md:py-12 border-t [border-image:linear-gradient(to_right,transparent,var(--color-slate-200),transparent)1]"
@@ -18,19 +18,20 @@ export function LandingFooter() {
                 height={28}
                 className="size-7"
               />
-              <span className="text-lg font-semibold text-gray-900">Mr.Bill</span>
+              <span className="font-display text-lg font-semibold text-navy">Mr.Bill</span>
             </div>
-            <p className="max-w-xs text-sm text-gray-600">
-              Open-source procurement for food &amp; beverage SMEs. MIT License.
+            <p className="max-w-xs text-sm text-cocoa">
+              Order desk for Cairo multi-branch cafés — chat, RFQ, compare, sync.
+              MIT License.
             </p>
           </div>
 
           <div className="space-y-2 sm:col-span-6 md:col-span-3 lg:col-span-2">
-            <h3 className="text-sm font-medium text-gray-900">Product</h3>
+            <h3 className="text-sm font-medium text-navy">Product</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  className="text-gray-600 transition hover:text-gray-900"
+                  className="text-cocoa transition hover:text-navy"
                   href="/app/orders"
                 >
                   Orders
@@ -38,7 +39,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link
-                  className="text-gray-600 transition hover:text-gray-900"
+                  className="text-cocoa transition hover:text-navy"
                   href="/app/quotes"
                 >
                   Quote desk
@@ -46,7 +47,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link
-                  className="text-gray-600 transition hover:text-gray-900"
+                  className="text-cocoa transition hover:text-navy"
                   href="/app/inventory"
                 >
                   Inventory
@@ -56,11 +57,11 @@ export function LandingFooter() {
           </div>
 
           <div className="space-y-2 sm:col-span-6 md:col-span-3 lg:col-span-2">
-            <h3 className="text-sm font-medium text-gray-900">Project</h3>
+            <h3 className="text-sm font-medium text-navy">Project</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  className="text-gray-600 transition hover:text-gray-900"
+                  className="text-cocoa transition hover:text-navy"
                   href={GITHUB_URL}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -70,7 +71,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link
-                  className="text-gray-600 transition hover:text-gray-900"
+                  className="text-cocoa transition hover:text-navy"
                   href="/app/orders/new"
                 >
                   New order
@@ -80,7 +81,7 @@ export function LandingFooter() {
           </div>
 
           <div className="space-y-2 sm:col-span-6 md:col-span-3 lg:col-span-2">
-            <h3 className="text-sm font-medium text-gray-900">Credits</h3>
+            <h3 className="text-sm font-medium text-navy">Credits</h3>
             <p className="text-sm text-gray-600">
               Landing adapted from{" "}
               <a

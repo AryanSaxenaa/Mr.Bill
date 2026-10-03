@@ -224,7 +224,7 @@ export async function POST(req: Request) {
 
     const waiting =
       hasAgentMailConfig()
-        ? "RFQs sent via AgentMail. Use Sync supplier replies on the order when suppliers respond."
+        ? "RFQs sent from your quote inbox. Use Sync supplier replies on the order when suppliers respond."
         : "Waiting for supplier quotes.";
 
     return NextResponse.json({
@@ -460,7 +460,7 @@ export async function POST(req: Request) {
         assistantText = `${assistantText}\n\n${rec.summary}`.trim();
       } else if (hasAgentMailConfig()) {
         assistantText =
-          `${assistantText}\n\nRFQs sent via AgentMail — sync supplier replies on the order desk.`.trim();
+          `${assistantText}\n\nRFQs sent from your quote inbox — sync supplier replies on the order desk.`.trim();
       }
     }
 

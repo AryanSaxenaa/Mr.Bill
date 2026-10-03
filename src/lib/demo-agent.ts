@@ -59,7 +59,7 @@ function formatLineItemsConfirm(session: AgentSession): string {
     )
     .join("\n");
   const rfqNote = hasAgentMailConfig()
-    ? "I’ll send real RFQs via AgentMail when you confirm."
+    ? "I’ll send RFQs from your quote inbox when you confirm."
     : "I’ll RFQ Cairo Dairy Co. and Bean & Barrel with mock replies for the demo.";
   return `Here’s what I heard for ${session.requestId} (needed by ${session.neededBy}, delivery focus ${session.deliveryBranch}):\n\n${lines}\n\nConfirm when this looks right — ${rfqNote}`;
 }
@@ -114,7 +114,7 @@ async function runConfirmPipeline(
 
   if (next.quoteIds.length < 2) {
     const waiting = hasAgentMailConfig()
-      ? "RFQs sent via AgentMail. Open the order and use Sync supplier replies when quotes arrive."
+      ? "RFQs are out from your quote inbox. Open the order and sync supplier replies when quotes arrive."
       : result.summary;
     return {
       assistantMessage: waiting,

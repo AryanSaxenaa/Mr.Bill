@@ -23,18 +23,18 @@ const STATS = [
 
 export function LandingStats() {
   return (
-    <section className="border-y border-stripe-border bg-white">
+    <section className="border-y border-stripe-border bg-linen">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4 md:py-16">
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center sm:text-left">
-              <p className="text-3xl font-bold tracking-tight text-[#0A2540] md:text-4xl">
+              <p className="font-display text-3xl font-semibold tracking-tight text-navy md:text-4xl">
                 {stat.value}
               </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
+              <p className="mt-1 text-sm font-medium text-navy">
                 {stat.label}
               </p>
-              <p className="mt-1 text-sm text-slate-600">{stat.detail}</p>
+              <p className="mt-1 text-sm text-cocoa">{stat.detail}</p>
             </div>
           ))}
         </div>

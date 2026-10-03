@@ -72,8 +72,8 @@ export default function QuotesPage() {
           <CardContent className="py-10 text-center text-cocoa">
             <p className="font-display text-lg text-espresso">No quotes yet</p>
             <p className="mt-2 text-sm">
-              Create an order, send RFQs, then paste supplier replies or run the
-              demo pipeline.
+              Start from New order — describe a Maison Layla restock, send RFQs,
+              then compare landed cost in EGP when quotes land.
             </p>
             <Link
               href="/app/orders/new"
