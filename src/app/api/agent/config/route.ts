@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
+import { getLlmPublicConfig } from "@/lib/llm-client";
 
 export function GET() {
-  return NextResponse.json({
-    liveAgent: Boolean(process.env.OPENAI_API_KEY),
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-  });
+  return NextResponse.json(getLlmPublicConfig());
 }

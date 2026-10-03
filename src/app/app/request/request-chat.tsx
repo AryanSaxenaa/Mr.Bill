@@ -314,10 +314,12 @@ export function RequestChat() {
       {agentMode === "demo" && (
         <div className="flex flex-col gap-3 rounded-lg border border-sage/40 bg-sage/10 px-4 py-3 text-sm text-espresso sm:flex-row sm:items-center sm:justify-between">
           <p>
-            <span className="font-medium">Demo mode</span> — no OpenAI key
+            <span className="font-medium">Demo mode</span> — no LLM API key
             detected. The scripted Layla flow uses the same tool path as the
-            judge script; add <code className="font-mono text-xs">OPENAI_API_KEY</code>{" "}
-            for a live LLM loop.
+            judge script; add{" "}
+            <code className="font-mono text-xs">OPENROUTER_API_KEY</code> or{" "}
+            <code className="font-mono text-xs">DEEPSEEK_API_KEY</code> for a
+            live agent loop.
           </p>
           <Button
             type="button"

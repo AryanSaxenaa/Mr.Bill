@@ -37,12 +37,37 @@ cp .env.example .env.local
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | No for judge demo | When set, `/app/request` uses an OpenAI tool loop on `POST /api/agent` |
-| `OPENAI_MODEL` | No | Defaults to `gpt-4o-mini` |
+| `LLM_PROVIDER` | No | Force `openrouter`, `deepseek`, or `openai`. If unset, the first configured key wins: OpenRouter → DeepSeek → OpenAI |
+| `OPENROUTER_API_KEY` | No* | Live agent via [OpenRouter](https://openrouter.ai/api/v1) (OpenAI-compatible) |
+| `OPENROUTER_MODEL` | No | Default `deepseek/deepseek-chat` (any OpenRouter model id) |
+| `OPENROUTER_HTTP_REFERER` | No | Optional attribution header for OpenRouter |
+| `OPENROUTER_APP_TITLE` | No | Optional `X-Title` header (default `Mr.Bill`) |
+| `DEEPSEEK_API_KEY` | No* | Live agent via [DeepSeek](https://api.deepseek.com) |
+| `DEEPSEEK_MODEL` | No | Default `deepseek-chat` |
+| `OPENAI_API_KEY` | No* | Live agent via OpenAI |
+| `OPENAI_MODEL` | No | Default `gpt-4o-mini` |
+
+\* At least one provider API key is required for live mode; judge demo needs none.
+
+**OpenRouter only** (`.env.local`):
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=deepseek/deepseek-chat
+OPENROUTER_HTTP_REFERER=http://localhost:3847
+OPENROUTER_APP_TITLE=Mr.Bill
+```
+
+**DeepSeek only** (`.env.local`):
+
+```bash
+DEEPSEEK_API_KEY=sk-...
+DEEPSEEK_MODEL=deepseek-chat
+```
 
 **Demo mode (no key):** `GET /api/agent/config` reports `liveAgent: false`. Chat runs the scripted Layla intake → confirm → RFQ → compare → recommend path via `src/lib/demo-agent.ts` and the same five tools in `src/lib/agent-tools.ts`.
 
-**Live mode (with key):** OpenAI calls tools through `src/lib/agent-executor.ts`. Supplier delivery stays mocked in `src/lib/mock-data.ts` for reliable demos.
+**Live mode (with key):** The agent uses an OpenAI-compatible chat completions + tools loop in `src/lib/llm-client.ts` (provider from env). Tools run through `src/lib/agent-executor.ts`. Supplier delivery stays mocked in `src/lib/mock-data.ts` for reliable demos.
 
 ## Architecture
 
@@ -53,8 +78,8 @@ Layla (browser)
 Next.js UI ── localStorage ── inventory, audit, agent session, request status
     │
     ▼
-POST /api/agent ──┬── demo-agent.ts (no API key)
-                  └── OpenAI tool loop (OPENAI_API_KEY set)
+POST /api/agent ──┬── demo-agent.ts (no LLM API key)
+                  └── llm-client.ts tool loop (OpenRouter / DeepSeek / OpenAI)
                             │
                             ▼
                   agent-executor.ts → agent-tools.ts

@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import type OpenAI from "openai";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent-prompt";
+import {
+  createLlmClient,
+  getLlmModel,
+  hasLiveLlmConfig,
+  resolveLlmProvider,
+} from "@/lib/llm-client";
 import { OPENAI_TOOL_DEFINITIONS } from "@/lib/agent-openai-schemas";
 import {
   executeAgentTool,
@@ -74,8 +80,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (!hasLiveLlmConfig()) {
     const demo = runDemoAgent({
       message: message ?? "",
       history: body.history,
@@ -174,7 +179,9 @@ export async function POST(req: Request) {
   session = intakeHeuristic(message ?? "", session);
 
   const history = body.history ?? [];
-  const openai = new OpenAI({ apiKey });
+  const provider = resolveLlmProvider()!;
+  const model = getLlmModel(provider);
+  const openai = createLlmClient();
 
   const sessionContext = `Current session JSON: ${JSON.stringify({
     requestId: session.requestId,
@@ -208,7 +215,7 @@ export async function POST(req: Request) {
   while (rounds < MAX_TOOL_ROUNDS) {
     rounds += 1;
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+      model,
       messages,
       tools: OPENAI_TOOL_DEFINITIONS,
       tool_choice: "auto",
@@ -290,7 +297,7 @@ export async function POST(req: Request) {
 
     if (toolCalls.length > 0 && !assistantText) {
       const followUp = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+        model,
         messages,
       });
       assistantText =
