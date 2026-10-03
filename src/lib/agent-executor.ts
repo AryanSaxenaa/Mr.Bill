@@ -1,5 +1,6 @@
 import {
   compareQuotes,
+  findSuppliers,
   parseQuoteReply,
   recommend,
   sendRfq,
@@ -20,6 +21,7 @@ import { hasAgentMailConfig } from "./agentmail";
 import { deliverRfqEmail } from "./rfq-email";
 
 export type ToolName =
+  | "find_suppliers"
   | "send_rfq"
   | "parse_quote_reply"
   | "compare_quotes"
@@ -65,13 +67,65 @@ export async function executeAgentTool(
   session: AgentSession,
   inventorySnapshot: { branchId: string; sku: string; qty: number }[],
 ): Promise<{ session: AgentSession; result: ToolCallResult }> {
-  const next: AgentSession = { ...session, quoteIds: [...session.quoteIds] };
+  const next: AgentSession = {
+    ...session,
+    quoteIds: [...session.quoteIds],
+    selectedRfqSupplierIds: session.selectedRfqSupplierIds ?? [
+      "cairo-dairy",
+      "bean-barrel",
+    ],
+    discoveredSuppliers: session.discoveredSuppliers ?? [],
+  };
 
   switch (name) {
+    case "find_suppliers": {
+      const query =
+        typeof args.query === "string" ? args.query.trim() : undefined;
+      const location =
+        typeof args.location === "string" ? args.location : "Cairo, Egypt";
+      const category =
+        typeof args.category === "string" ? args.category : undefined;
+      const lineItems =
+        parseLineItems(args.line_items).length > 0
+          ? parseLineItems(args.line_items)
+          : next.lineItems;
+
+      const output = await findSuppliers({
+        query,
+        location,
+        category,
+        lineItems,
+      });
+
+      next.discoveredSuppliers = output.results;
+      if (next.selectedRfqSupplierIds.length === 0 && output.results.length > 0) {
+        const catalogDefaults = output.results
+          .filter((r) => r.source === "mock" && (r.id === "cairo-dairy" || r.id === "bean-barrel"))
+          .map((r) => r.id);
+        next.selectedRfqSupplierIds =
+          catalogDefaults.length > 0
+            ? catalogDefaults
+            : output.results.slice(0, 2).map((r) => r.id);
+      }
+
+      const note = output.message ? ` ${output.message}` : "";
+      return {
+        session: next,
+        result: {
+          name,
+          input: args,
+          output,
+          summary: `Found ${output.results.length} supplier candidates for “${output.query}”.${note}`,
+        },
+      };
+    }
+
     case "send_rfq": {
       const supplierIds = Array.isArray(args.supplier_ids)
         ? args.supplier_ids.filter((x): x is string => typeof x === "string")
-        : ["cairo-dairy", "bean-barrel"];
+        : next.selectedRfqSupplierIds.length > 0
+          ? next.selectedRfqSupplierIds
+          : ["cairo-dairy", "bean-barrel"];
       const lineItems =
         parseLineItems(args.line_items).length > 0
           ? parseLineItems(args.line_items)
@@ -96,6 +150,7 @@ export async function executeAgentTool(
         lineItems,
         deliveryBranch,
         neededBy,
+        discoveredSuppliers: next.discoveredSuppliers,
       });
 
       const agentMailEnabled = hasAgentMailConfig();
@@ -116,11 +171,15 @@ export async function executeAgentTool(
       next.rfqId = output.rfqId;
       next.rfqMessages = output.messages;
       next.rfqEmailDeliveries = emailDeliveries;
+      next.selectedRfqSupplierIds = supplierIds;
       next.status = "rfq_sent";
 
       const autoParsed: ToolCallResult[] = [];
       if (!agentMailEnabled) {
         for (const supplierId of supplierIds) {
+          if (!MOCK_QUOTE_REPLIES[supplierId]) {
+            continue;
+          }
           const raw =
             MOCK_QUOTE_REPLIES[supplierId] ??
             `Mock quote from ${supplierId} (auto-generated for demo).`;

@@ -6,6 +6,15 @@ import {
   type Quote,
   supplierName,
 } from "./mock-data";
+import {
+  buildSupplierSearchQuery,
+  resolveSupplierDisplayName,
+  searchSuppliers,
+  type DiscoveredSupplier,
+  type SupplierSearchResult,
+} from "./serpapi";
+
+export type { DiscoveredSupplier, SupplierSearchResult };
 
 export interface SendRfqInput {
   requestId: string;
@@ -13,7 +22,17 @@ export interface SendRfqInput {
   lineItems: LineItem[];
   deliveryBranch: string;
   neededBy: string;
+  discoveredSuppliers?: DiscoveredSupplier[];
 }
+
+export interface FindSuppliersInput {
+  query?: string;
+  location?: string;
+  category?: string;
+  lineItems?: LineItem[];
+}
+
+export interface FindSuppliersOutput extends SupplierSearchResult {}
 
 export interface SendRfqOutput {
   rfqId: string;
@@ -122,16 +141,37 @@ function findQuote(supplierId: string): Quote | undefined {
   return MOCK_QUOTES.find((q) => q.supplierId === supplierId);
 }
 
+export async function findSuppliers(
+  input: FindSuppliersInput,
+): Promise<FindSuppliersOutput> {
+  return searchSuppliers({
+    query: input.query,
+    location: input.location,
+    category: input.category,
+    lineItems: input.lineItems,
+  });
+}
+
+export { buildSupplierSearchQuery };
+
 export function sendRfq(input: SendRfqInput): SendRfqOutput {
   const sentAt = new Date().toISOString();
   const linesText = input.lineItems
     .map((l) => `• ${l.name} × ${l.qty} ${l.unit} (${l.branchId})`)
     .join("\n");
+  const discovered = input.discoveredSuppliers ?? [];
 
-  const messages = input.supplierIds.map((supplierId) => ({
-    supplierId,
-    body: `Hi ${supplierName(supplierId)},\n\nRFQ ${MOCK_RFQ_ID} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n\n— Mr.Bill (on behalf of Layla)`,
-  }));
+  const messages = input.supplierIds.map((supplierId) => {
+    const name = resolveSupplierDisplayName(supplierId, discovered);
+    const ext = discovered.find((d) => d.id === supplierId);
+    const contactLine = ext?.url
+      ? `Reference: ${ext.url}${ext.phone ? `\nPhone: ${ext.phone}` : ""}`
+      : "";
+    return {
+      supplierId,
+      body: `Hi ${name},\n\nRFQ ${MOCK_RFQ_ID} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n${contactLine ? `\n${contactLine}\n` : ""}\n— Mr.Bill (on behalf of Layla)`,
+    };
+  });
 
   return {
     rfqId: MOCK_RFQ_ID,

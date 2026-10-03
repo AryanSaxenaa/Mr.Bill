@@ -4,6 +4,33 @@ export const OPENAI_TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "find_suppliers",
+      description:
+        "Search Google (via SerpAPI) for wholesale F&B suppliers near Cairo before sending RFQs. Use after line items are confirmed or when Layla asks to discover vendors.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description:
+              "Search phrase e.g. wholesale oat milk supplier Cairo Egypt",
+          },
+          location: {
+            type: "string",
+            description: "Geo hint for SerpAPI location parameter",
+          },
+          category: {
+            type: "string",
+            description: "Optional category e.g. dairy, coffee wholesale",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "send_rfq",
       description:
         "Send RFQ messages to suppliers after Layla confirmed line items. Simulates email/WhatsApp send in hackathon demo.",

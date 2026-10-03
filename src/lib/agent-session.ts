@@ -1,11 +1,14 @@
 import type { LineItem } from "./mock-data";
 import type { RecommendOutput } from "./agent-tools";
+import type { DiscoveredSupplier } from "./serpapi";
 
 export interface AgentSession {
   requestId: string;
   lineItems: LineItem[];
   neededBy: string;
   deliveryBranch: string;
+  discoveredSuppliers?: DiscoveredSupplier[];
+  selectedRfqSupplierIds: string[];
   rfqId?: string;
   rfqMessages?: { supplierId: string; body: string }[];
   rfqEmailDeliveries?: {
@@ -35,6 +38,7 @@ export const DEFAULT_SESSION: AgentSession = {
   neededBy: "Friday",
   deliveryBranch: "Maadi",
   quoteIds: [],
+  selectedRfqSupplierIds: ["cairo-dairy", "bean-barrel"],
   status: "intake",
 };
 

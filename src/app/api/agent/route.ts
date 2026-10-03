@@ -56,6 +56,13 @@ function intakeHeuristic(message: string, session: AgentSession): AgentSession {
   return session;
 }
 
+function defaultSupplierIds(session: AgentSession): string[] {
+  if (session.selectedRfqSupplierIds?.length) {
+    return session.selectedRfqSupplierIds;
+  }
+  return ["cairo-dairy", "bean-barrel"];
+}
+
 function isConfirmMessage(message: string): boolean {
   const t = message.toLowerCase().trim();
   return (
@@ -170,7 +177,7 @@ export async function POST(req: Request) {
       "send_rfq",
       {
         request_id: session.requestId,
-        supplier_ids: ["cairo-dairy", "bean-barrel"],
+        supplier_ids: defaultSupplierIds(session),
         line_items: session.lineItems,
         delivery_branch: session.deliveryBranch,
         needed_by: session.neededBy,
@@ -287,6 +294,8 @@ export async function POST(req: Request) {
     status: session.status,
     neededBy: session.neededBy,
     deliveryBranch: session.deliveryBranch,
+    discoveredSuppliers: session.discoveredSuppliers,
+    selectedRfqSupplierIds: session.selectedRfqSupplierIds,
   })}`;
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -416,7 +425,7 @@ export async function POST(req: Request) {
         "send_rfq",
         {
           request_id: session.requestId,
-          supplier_ids: ["cairo-dairy", "bean-barrel"],
+          supplier_ids: defaultSupplierIds(session),
           line_items: session.lineItems,
           delivery_branch: session.deliveryBranch,
           needed_by: session.neededBy,

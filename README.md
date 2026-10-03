@@ -100,7 +100,22 @@ DEEPSEEK_MODEL=deepseek-chat
 | `AGENTMAIL_INBOX_ID` | No | Reuse an inbox; otherwise one is created with `clientId` `mrbill-procurement-v1` on first send. |
 | `MRBILL_RFQ_TO_EMAIL` | No | **Hackathon-safe:** all RFQs go to this address; subject prefix `[Supplier: …]` keeps supplier context. |
 
-**Production webhook URL** (register in AgentMail console):
+### SerpAPI (supplier discovery)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SERPAPI_API_KEY` | No | When set, `find_suppliers` and `POST /api/suppliers/search` call [SerpAPI](https://serpapi.com/) Google search for wholesale vendors near Cairo. Without it, the app returns the mock `SUPPLIERS` catalog with a clear message (demo-safe). |
+
+**Local setup** (`.env.local` only — never commit):
+
+```bash
+SERPAPI_API_KEY=your_key_from_serpapi_dashboard
+```
+
+**Railway:** add `SERPAPI_API_KEY` under **Variables** only when you want live Google discovery on production. Demo judging works without it.
+
+Server calls live in `src/lib/serpapi.ts`; the browser uses `POST /api/suppliers/search` so the key never ships to the client.
+
 
 `https://mrbill-production.up.railway.app/api/webhooks/agentmail`
 
@@ -122,7 +137,7 @@ POST /api/agent ──┬── demo-agent.ts (no LLM API key)
                             │
                             ▼
                   agent-executor.ts → agent-tools.ts
-                  send_rfq · parse_quote_reply · compare_quotes · recommend · update_inventory
+                  find_suppliers · send_rfq · parse_quote_reply · compare_quotes · recommend · update_inventory
 ```
 
 Shared app state lives in `src/lib/app-state.tsx` so **Dashboard**, **Quotes**, **Inventory**, and **New request** read the same session after an agent run.
@@ -131,6 +146,7 @@ Shared app state lives in `src/lib/app-state.tsx` so **Dashboard**, **Quotes**, 
 
 | Tool | Module |
 |------|--------|
+| `find_suppliers` | `src/lib/serpapi.ts` + `src/lib/agent-tools.ts` |
 | `send_rfq` | `src/lib/agent-tools.ts` |
 | `parse_quote_reply` | same |
 | `compare_quotes` | same |
@@ -193,8 +209,9 @@ Railway sets **`PORT`** at runtime; `npm run start` runs `next start -p ${PORT:-
    | `OPENROUTER_MODEL` | e.g. `deepseek/deepseek-chat` |
    | `NEXT_PUBLIC_APP_URL` | Your Railway HTTPS URL (e.g. `https://mr-bill-production.up.railway.app`) |
    | `OPENROUTER_HTTP_REFERER` | Same as `NEXT_PUBLIC_APP_URL` (recommended for OpenRouter) |
+   | `SERPAPI_API_KEY` | Optional — live supplier discovery; omit for demo catalog fallback |
 
-   Redeploy after changing variables. Demo mode works without API keys; live chat needs at least one provider key.
+   Redeploy after changing variables. Demo mode works without API keys; live chat needs at least one provider key. **Do not set `SERPAPI_API_KEY` on Railway unless you intend to use live Google search** (local `.env.local` is enough for development).
 
 5. **Optional CLI** (if [Railway CLI](https://docs.railway.com/guides/cli) is installed locally):
 

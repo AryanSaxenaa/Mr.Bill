@@ -73,13 +73,35 @@ async function runConfirmPipeline(
     ...session,
     lineItems:
       session.lineItems.length > 0 ? session.lineItems : PARSED_LINE_ITEMS,
+    selectedRfqSupplierIds: session.selectedRfqSupplierIds ?? [
+      "cairo-dairy",
+      "bean-barrel",
+    ],
   };
+
+  const { session: s0, result: found } = await executeAgentTool(
+    "find_suppliers",
+    {
+      query: undefined,
+      location: "Cairo, Egypt",
+      line_items: next.lineItems,
+    },
+    next,
+    inventory,
+  );
+  next = s0;
+  toolTrace.push({ name: found.name, summary: found.summary });
+
+  const supplierIds =
+    next.selectedRfqSupplierIds.length > 0
+      ? next.selectedRfqSupplierIds
+      : ["cairo-dairy", "bean-barrel"];
 
   const { session: s1, result } = await executeAgentTool(
     "send_rfq",
     {
       request_id: next.requestId,
-      supplier_ids: ["cairo-dairy", "bean-barrel"],
+      supplier_ids: supplierIds,
       line_items: next.lineItems,
       delivery_branch: next.deliveryBranch,
       needed_by: next.neededBy,

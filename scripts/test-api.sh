@@ -74,8 +74,23 @@ expect_status "GET /api/agent/config" GET "/api/agent/config" "200"
 expect_status "GET /api/agentmail/inbox" GET "/api/agentmail/inbox" "200"
 expect_status "POST /api/webhooks/agentmail" POST "/api/webhooks/agentmail" "200" '{"event_type":"message.received","message":{"message_id":"smoke-test-msg","inbox_id":"smoke-inbox","subject":"[Supplier: Cairo Dairy Co.] RFQ RFQ-2026-0042","text":"Oat milk 1L: EGP 42.50/carton"}}'
 
-expect_status "POST /api/agent invalid JSON" POST "/api/agent" "400" 'not json'
 expect_status "POST /api/agent missing message" POST "/api/agent" "400" '{}'
+
+code=$(curl -s -o /tmp/mr-bill-suppliers.json -w "%{http_code}" -X POST "$BASE/api/suppliers/search" \
+  -H "Content-Type: application/json" \
+  -d '{"lineItems":[{"sku":"OAT-1L","name":"Oat milk 1L","qty":48,"unit":"carton","branchId":"maadi"}]}')
+
+if [ "$code" = "200" ] && grep -q '"results"' /tmp/mr-bill-suppliers.json; then
+  if grep -q '"poweredBySerpApi":false' /tmp/mr-bill-suppliers.json; then
+    pass "POST /api/suppliers/search mock fallback (no SERPAPI_API_KEY)"
+  else
+    pass "POST /api/suppliers/search (HTTP 200, SerpAPI live)"
+  fi
+else
+  fail "POST /api/suppliers/search (expected HTTP 200 + results, got $code)"
+fi
+
+expect_status "POST /api/agent invalid JSON" POST "/api/agent" "400" 'not json'
 
 code=$(curl -s -o /tmp/mr-bill-intake.json -w "%{http_code}" -X POST "$BASE/api/agent" \
   -H "Content-Type: application/json" \
@@ -91,7 +106,7 @@ else
   fail "POST /api/agent live intake (expected HTTP 200 + assistantMessage, got $code)"
 fi
 
-SEND_RFQ_BODY='{"message":"","confirmAction":"send_rfq","session":{"requestId":"req-smoke","lineItems":[],"status":"draft","neededBy":"Friday","deliveryBranch":"Maadi","quoteIds":[],"comparisonId":null}}'
+SEND_RFQ_BODY='{"message":"","confirmAction":"send_rfq","session":{"requestId":"req-smoke","lineItems":[],"status":"draft","neededBy":"Friday","deliveryBranch":"Maadi","quoteIds":[],"comparisonId":null,"selectedRfqSupplierIds":["cairo-dairy","bean-barrel"]}}'
 code=$(curl -s -o /tmp/mr-bill-rfq.json -w "%{http_code}" -X POST "$BASE/api/agent" \
   -H "Content-Type: application/json" \
   -d "$SEND_RFQ_BODY")

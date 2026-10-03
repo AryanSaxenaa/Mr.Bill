@@ -11,7 +11,11 @@ import {
   type BranchId,
   type LineItem,
 } from "@/lib/mock-data";
-import { ACTIVE_REQUEST_ID } from "@/lib/agent-tools";
+import {
+  ACTIVE_REQUEST_ID,
+  buildSupplierSearchQuery,
+} from "@/lib/agent-tools";
+import { DiscoveredSuppliersPanel } from "@/components/discovered-suppliers-panel";
 import { DEFAULT_SESSION } from "@/lib/agent-session";
 import { useAppState } from "@/lib/app-state";
 import { useAgentApi } from "@/lib/use-agent-api";
@@ -76,6 +80,15 @@ export function NewOrderWorkspace() {
   );
   const [nlDraft, setNlDraft] = useState(DEMO_INTAKE_TEXT);
   const [assistantNote, setAssistantNote] = useState<string | null>(null);
+  const [discovered, setDiscovered] = useState(
+    () => agentSession.discoveredSuppliers ?? [],
+  );
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>(
+    () =>
+      agentSession.selectedRfqSupplierIds?.length
+        ? agentSession.selectedRfqSupplierIds
+        : ["cairo-dairy", "bean-barrel"],
+  );
 
   useEffect(() => {
     void fetch("/api/agent/config")
@@ -91,6 +104,15 @@ export function NewOrderWorkspace() {
       setLines(agentSession.lineItems);
     }
   }, [agentSession.lineItems]);
+
+  useEffect(() => {
+    if (agentSession.discoveredSuppliers?.length) {
+      setDiscovered(agentSession.discoveredSuppliers);
+    }
+    if (agentSession.selectedRfqSupplierIds?.length) {
+      setSelectedSupplierIds(agentSession.selectedRfqSupplierIds);
+    }
+  }, [agentSession.discoveredSuppliers, agentSession.selectedRfqSupplierIds]);
 
   const inventorySnapshot = useMemo(
     () =>
@@ -109,8 +131,10 @@ export function NewOrderWorkspace() {
       lineItems: lines.filter((l) => l.sku && l.name),
       neededBy,
       deliveryBranch: branchName(branchId),
+      discoveredSuppliers: discovered,
+      selectedRfqSupplierIds: selectedSupplierIds,
     };
-  }, [agentSession, lines, neededBy, branchId]);
+  }, [agentSession, lines, neededBy, branchId, discovered, selectedSupplierIds]);
 
   const handlers = useMemo(
     () => ({
@@ -137,8 +161,37 @@ export function NewOrderWorkspace() {
     }
   };
 
-  const handleSendRfqs = async () => {
+  const handleFindSuppliersViaAgent = async () => {
     const session = sessionWithForm();
+    const query = buildSupplierSearchQuery(
+      session.lineItems,
+      undefined,
+      "Cairo, Egypt",
+    );
+    const data = await callAgent({
+      message: `Find wholesale suppliers for: ${query}`,
+      session: { ...session, status: "awaiting_confirm" },
+      inventory: inventorySnapshot,
+    });
+    if (!data) return;
+    applyResponseSideEffects(data, handlers);
+    setAssistantNote(data.assistantMessage);
+    if (data.session.discoveredSuppliers) {
+      setDiscovered(data.session.discoveredSuppliers);
+    }
+    if (data.session.selectedRfqSupplierIds?.length) {
+      setSelectedSupplierIds(data.session.selectedRfqSupplierIds);
+    }
+  };
+
+  const handleSendRfqs = async () => {
+    const session = {
+      ...sessionWithForm(),
+      selectedRfqSupplierIds:
+        selectedSupplierIds.length > 0
+          ? selectedSupplierIds
+          : ["cairo-dairy", "bean-barrel"],
+    };
     const data = await callAgent({
       message: "Send RFQs to suppliers for confirmed line items.",
       confirmAction: "send_rfq",
@@ -352,6 +405,30 @@ export function NewOrderWorkspace() {
           </div>
 
           <div className="flex flex-wrap gap-2 border-t border-oat pt-4">
+            <DiscoveredSuppliersPanel
+              lineItems={lines.filter((l) => l.sku && l.name)}
+              selectedIds={selectedSupplierIds}
+              onSelectedIdsChange={setSelectedSupplierIds}
+              discovered={discovered}
+              onDiscoveredChange={setDiscovered}
+              disabled={Boolean(agentSession.rfqId)}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 border-t border-oat pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-oat"
+              disabled={
+                lines.filter((l) => l.sku && l.name).length === 0 ||
+                loading ||
+                Boolean(agentSession.rfqId)
+              }
+              onClick={() => void handleFindSuppliersViaAgent()}
+            >
+              Find suppliers (agent)
+            </Button>
             <Button
               type="button"
               className="bg-espresso text-linen"

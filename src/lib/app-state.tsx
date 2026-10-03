@@ -66,6 +66,18 @@ function loadJson<T>(key: string, fallback: T): T {
   }
 }
 
+function normalizeAgentSession(session: AgentSession): AgentSession {
+  return {
+    ...DEFAULT_SESSION,
+    ...session,
+    selectedRfqSupplierIds:
+      session.selectedRfqSupplierIds?.length
+        ? session.selectedRfqSupplierIds
+        : DEFAULT_SESSION.selectedRfqSupplierIds,
+    discoveredSuppliers: session.discoveredSuppliers ?? [],
+  };
+}
+
 function sessionFromStatus(status: RequestFlowStatus, session: AgentSession): AgentSession {
   if (status === "approved") {
     return { ...session, status: "approved" };
@@ -91,7 +103,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       "idle",
     );
     setRequestStatusState(savedStatus);
-    const savedSession = loadJson<AgentSession>(SESSION_KEY, DEFAULT_SESSION);
+    const savedSession = normalizeAgentSession(
+      loadJson<AgentSession>(SESSION_KEY, DEFAULT_SESSION),
+    );
     setAgentSessionState(sessionFromStatus(savedStatus, savedSession));
     setHydrated(true);
   }, []);

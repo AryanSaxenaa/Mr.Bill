@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowLeft, Check, FileText, Loader2, RefreshCw } from "lucide-react";
+import { DiscoveredSuppliersPanel } from "@/components/discovered-suppliers-panel";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -45,6 +46,15 @@ export default function OrderDetailPage() {
     useAgentApi();
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [discovered, setDiscovered] = useState(
+    () => agentSession.discoveredSuppliers ?? [],
+  );
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>(
+    () =>
+      agentSession.selectedRfqSupplierIds?.length
+        ? agentSession.selectedRfqSupplierIds
+        : ["cairo-dairy", "bean-barrel"],
+  );
 
   const isActive = orderId === (agentSession.requestId || ACTIVE_ORDER_ID);
   const staticOrder = DEMO_ORDERS.find((o) => o.id === orderId);
@@ -145,6 +155,20 @@ export default function OrderDetailPage() {
       setSyncLoading(false);
     }
   }, [agentSession, inventorySnapshot, setAgentSession, setRequestStatus]);
+
+  const persistSupplierSelection = useCallback(
+    (ids: string[], rows: typeof discovered) => {
+      setSelectedSupplierIds(ids);
+      setDiscovered(rows);
+      setAgentSession({
+        ...agentSession,
+        selectedRfqSupplierIds: ids,
+        discoveredSuppliers: rows,
+      });
+    },
+    [agentSession, setAgentSession],
+  );
+
   const showCompare =
     isActive &&
     agentSession.quoteIds.length >= 2 &&
@@ -253,6 +277,20 @@ export default function OrderDetailPage() {
             </Table>
           </CardContent>
         </Card>
+      )}
+
+      {isActive && !agentSession.rfqId && displayLines.length > 0 && (
+        <DiscoveredSuppliersPanel
+          lineItems={lineItems.length > 0 ? lineItems : displayLines}
+          selectedIds={selectedSupplierIds}
+          onSelectedIdsChange={(ids) =>
+            persistSupplierSelection(ids, discovered)
+          }
+          discovered={discovered}
+          onDiscoveredChange={(rows) =>
+            persistSupplierSelection(selectedSupplierIds, rows)
+          }
+        />
       )}
 
       {rfqMessages && rfqMessages.length > 0 && (
