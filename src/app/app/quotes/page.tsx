@@ -68,7 +68,7 @@ export default function QuotesPage() {
       <PasteQuoteReply />
 
       {!quotesReady && (
-        <Card className="border-oat bg-linen">
+        <Card className="border-stripe-border bg-linen">
           <CardContent className="py-10 text-center text-cocoa">
             <p className="font-display text-lg text-espresso">No quotes yet</p>
             <p className="mt-2 text-sm">
@@ -79,7 +79,7 @@ export default function QuotesPage() {
               href="/app/orders/new"
               className={cn(
                 buttonVariants(),
-                "mt-4 inline-flex bg-espresso text-linen",
+                "mt-4 inline-flex",
               )}
             >
               New order
@@ -89,10 +89,10 @@ export default function QuotesPage() {
       )}
 
       {quotesReady && !hasComparison && (
-        <Card className="border-oat bg-linen">
+        <Card className="border-stripe-border bg-linen">
           <CardContent className="py-10 text-center text-cocoa">
             Send RFQs from{" "}
-            <Link href="/app/orders/new" className="text-terracotta underline">
+            <Link href="/app/orders/new" className="text-indigo-accent underline">
               New order
             </Link>{" "}
             or paste replies below to populate the comparison matrix.
@@ -109,7 +109,7 @@ export default function QuotesPage() {
       )}
 
       {rec && hasComparison && (
-        <Card className="card-shadow border-oat bg-linen">
+        <Card className="card-shadow border-stripe-border bg-linen">
           <CardHeader>
             <CardTitle className="font-display text-lg text-espresso">
               Split recommendation
@@ -130,7 +130,7 @@ export default function QuotesPage() {
                 href={`/app/orders/${agentSession.requestId || ACTIVE_ORDER_ID}`}
                 className={cn(
                   buttonVariants(),
-                  "bg-terracotta text-linen hover:bg-terracotta/90",
+                  "bg-primary text-primary-foreground",
                 )}
               >
                 <Check className="mr-2 size-4" />

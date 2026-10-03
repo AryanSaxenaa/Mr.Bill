@@ -121,7 +121,7 @@ export function DiscoveredSuppliersPanel({
   const info = localMessage ?? searchMessage;
 
   return (
-    <div className="space-y-3 rounded-xl border border-oat bg-cream/40 p-4">
+    <div className="space-y-3 rounded-xl border border-stripe-border bg-cream/40 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-semibold text-espresso">
@@ -154,10 +154,10 @@ export function DiscoveredSuppliersPanel({
         <p className="text-sm text-cocoa">{info}</p>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-oat bg-linen">
+      <div className="overflow-x-auto rounded-lg border border-stripe-border bg-linen">
         <Table>
           <TableHeader>
-            <TableRow className="border-oat hover:bg-transparent">
+            <TableRow className="border-stripe-border hover:bg-transparent">
               <TableHead className="w-10" />
               <TableHead>Name</TableHead>
               <TableHead>Snippet</TableHead>
@@ -166,7 +166,7 @@ export function DiscoveredSuppliersPanel({
           </TableHeader>
           <TableBody>
             {tableRows.map((row) => (
-              <TableRow key={row.id} className="border-oat">
+              <TableRow key={row.id} className="border-stripe-border">
                 <TableCell>
                   <input
                     type="checkbox"

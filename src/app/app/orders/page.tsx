@@ -73,10 +73,7 @@ export default function OrdersPage() {
         </div>
         <Link
           href="/app/orders/new"
-          className={cn(
-            buttonVariants(),
-            "bg-espresso text-linen hover:bg-espresso/90",
-          )}
+          className={buttonVariants()}
         >
           <PackagePlus className="mr-2 size-4" />
           New order
@@ -84,7 +81,7 @@ export default function OrdersPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-cocoa">
               Open pipeline
@@ -97,7 +94,7 @@ export default function OrdersPage() {
             <p className="text-xs text-cocoa">Including active desk order</p>
           </CardContent>
         </Card>
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-cocoa">
               Below par SKUs
@@ -110,7 +107,7 @@ export default function OrdersPage() {
             <p className="text-xs text-cocoa">Filtered by branch switcher</p>
           </CardContent>
         </Card>
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-cocoa">
               Active order
@@ -130,7 +127,7 @@ export default function OrdersPage() {
           <Link
             key={order.id}
             href={`/app/orders/${order.id}`}
-            className="block rounded-xl border border-oat bg-linen p-4 transition-shadow duration-200 hover:card-shadow"
+            className="block rounded-xl border border-stripe-border bg-linen p-4 transition-shadow duration-200 hover:card-shadow"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

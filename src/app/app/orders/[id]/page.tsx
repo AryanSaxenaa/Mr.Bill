@@ -212,7 +212,7 @@ export default function OrderDetailPage() {
         {isActive && stage === "draft" && (
           <Link
             href="/app/orders/new"
-            className={cn(buttonVariants({ variant: "outline" }), "border-oat")}
+            className={cn(buttonVariants({ variant: "outline" }), "border-stripe-border")}
           >
             Edit intake
           </Link>
@@ -225,7 +225,7 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      <Card className="border-oat bg-linen card-shadow">
+      <Card className="border-stripe-border bg-linen card-shadow">
         <CardHeader>
           <CardTitle className="font-display text-lg text-espresso">
             Pipeline
@@ -237,7 +237,7 @@ export default function OrderDetailPage() {
       </Card>
 
       {displayLines.length > 0 && (
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader>
             <CardTitle className="font-display text-lg text-espresso">
               Line items
@@ -246,7 +246,7 @@ export default function OrderDetailPage() {
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-oat">
+                <TableRow className="border-stripe-border">
                   <TableHead>SKU</TableHead>
                   <TableHead>Item</TableHead>
                   <TableHead>Qty</TableHead>
@@ -257,7 +257,7 @@ export default function OrderDetailPage() {
                 {displayLines.map((line) => (
                   <TableRow
                     key={`${line.branchId}-${line.sku}`}
-                    className="border-oat"
+                    className="border-stripe-border"
                   >
                     <TableCell className="font-mono text-xs">
                       {line.sku}
@@ -294,7 +294,7 @@ export default function OrderDetailPage() {
       )}
 
       {rfqMessages && rfqMessages.length > 0 && (
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
@@ -312,7 +312,7 @@ export default function OrderDetailPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-oat"
+                  className="border-stripe-border"
                   disabled={syncLoading}
                   onClick={() => void handleSyncReplies()}
                 >
@@ -336,9 +336,9 @@ export default function OrderDetailPage() {
               return (
                 <div
                   key={msg.supplierId}
-                  className="rounded-lg border border-oat bg-cream"
+                  className="rounded-lg border border-stripe-border bg-cream"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-oat px-3 py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stripe-border px-3 py-2">
                     <p className="text-sm font-medium text-espresso">
                       {supplierName(msg.supplierId)}
                     </p>
@@ -349,7 +349,7 @@ export default function OrderDetailPage() {
                     </span>
                   </div>
                   {delivery?.mode === "agentmail" && (
-                    <p className="border-b border-oat px-3 py-2 font-mono text-xs text-cocoa">
+                    <p className="border-b border-stripe-border px-3 py-2 font-mono text-xs text-cocoa">
                       From {delivery.from} → {delivery.to}
                     </p>
                   )}
@@ -373,7 +373,7 @@ export default function OrderDetailPage() {
       )}
 
       {isActive && agentSession.recommendation && (
-        <Card className="border-oat bg-linen card-shadow">
+        <Card className="border-stripe-border bg-linen card-shadow">
           <CardHeader>
             <CardTitle className="font-display text-lg text-espresso">
               Recommendation
@@ -409,7 +409,7 @@ export default function OrderDetailPage() {
                 href="/app/inventory"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "border-oat",
+                  "border-stripe-border",
                 )}
               >
                 View inventory ledger

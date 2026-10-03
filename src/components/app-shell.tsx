@@ -44,18 +44,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-cream">
-      <aside className="hidden w-60 shrink-0 border-r border-oat bg-linen md:flex md:flex-col">
-        <div className="flex items-center gap-2 border-b border-oat px-5 py-5">
-          <Coffee className="size-6 text-espresso" strokeWidth={1.75} />
+    <div className="flex min-h-screen bg-surface">
+      <aside className="hidden w-60 shrink-0 border-r border-stripe-border bg-linen md:flex md:flex-col">
+        <div className="flex items-center gap-2 border-b border-stripe-border px-5 py-5">
+          <Coffee className="size-6 text-indigo-accent" strokeWidth={1.75} />
           <div>
-            <p className="font-display text-lg font-semibold text-espresso">
+            <p className="text-lg font-semibold tracking-tight text-navy">
               Mr.Bill
             </p>
             <p className="text-xs text-cocoa">Order desk · Maison Layla</p>
           </div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-1 flex-col gap-0.5 p-3">
           {NAV.map((item) => {
             const active = isActive(item.href);
             return (
@@ -65,11 +65,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                   active
-                    ? "bg-espresso text-linen"
-                    : "text-cocoa hover:bg-oat/60 hover:text-espresso",
+                    ? "bg-indigo-accent/10 text-indigo-accent"
+                    : "text-cocoa hover:bg-surface hover:text-navy",
                 )}
               >
-                <item.icon className="size-4 shrink-0" />
+                <item.icon
+                  className="size-4 shrink-0"
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
                 {item.label}
               </Link>
             );
@@ -78,12 +81,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-oat bg-linen/80 px-4 py-3 backdrop-blur-sm md:px-8">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-stripe-border bg-linen/90 px-4 py-3 backdrop-blur-sm md:px-8">
           <div className="flex items-center gap-2 md:hidden">
-            <Coffee className="size-5 text-espresso" />
-            <span className="font-display font-semibold text-espresso">
-              Mr.Bill
-            </span>
+            <Coffee className="size-5 text-indigo-accent" strokeWidth={1.75} />
+            <span className="font-semibold text-navy">Mr.Bill</span>
           </div>
           <p className="text-sm text-cocoa">
             Procurement on autopilot — RFQ, compare, approve
@@ -93,7 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               type="button"
               variant="outline"
               size="sm"
-              className="border-oat bg-cream text-cocoa hover:bg-oat/40"
+              className="border-stripe-border bg-surface text-cocoa"
               onClick={resetDemoData}
             >
               Reset demo data
@@ -105,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 setBranchFilter(v as BranchId | "all")
               }
             >
-              <SelectTrigger className="w-[160px] border-oat bg-cream">
+              <SelectTrigger className="w-[160px] border-stripe-border bg-surface">
                 <SelectValue placeholder="All branches" />
               </SelectTrigger>
               <SelectContent>

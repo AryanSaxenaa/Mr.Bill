@@ -80,7 +80,7 @@ export function PasteQuoteReply() {
   };
 
   return (
-    <Card className="card-shadow border-oat bg-linen">
+    <Card className="card-shadow border-stripe-border bg-linen">
       <CardHeader>
         <CardTitle className="font-display text-lg text-espresso">
           Paste supplier reply
@@ -93,7 +93,7 @@ export function PasteQuoteReply() {
       </CardHeader>
       <CardContent className="space-y-4">
         {!canParse && (
-          <p className="rounded-lg border border-oat bg-cream px-3 py-2 text-sm text-cocoa">
+          <p className="rounded-lg border border-stripe-border bg-cream px-3 py-2 text-sm text-cocoa">
             Send an RFQ from{" "}
             <span className="font-medium text-espresso">New request</span> first
             so replies link to your RFQ id.
@@ -108,7 +108,7 @@ export function PasteQuoteReply() {
               setRawText(MOCK_QUOTE_REPLIES[v] ?? "");
             }}
           >
-            <SelectTrigger className="w-full border-oat bg-cream sm:w-56">
+            <SelectTrigger className="w-full border-stripe-border bg-cream sm:w-56">
               <SelectValue placeholder="Supplier" />
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export function PasteQuoteReply() {
           </Select>
           <Button
             type="button"
-            className="bg-espresso text-linen"
+            className="bg-primary text-primary-foreground"
             disabled={loading || !rawText.trim() || !canParse}
             onClick={() => void handleParse()}
           >
@@ -134,7 +134,7 @@ export function PasteQuoteReply() {
         <Textarea
           value={rawText}
           onChange={(e) => setRawText(e.target.value)}
-          className="min-h-[140px] border-oat bg-cream font-mono text-xs"
+          className="min-h-[140px] border-stripe-border bg-cream font-mono text-xs"
           placeholder="Paste supplier pricing reply…"
           disabled={loading}
         />

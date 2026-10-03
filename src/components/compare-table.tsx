@@ -85,10 +85,10 @@ export function CompareTable({
   }, [comparison.matrix, displaySuppliers]);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-oat bg-linen">
+    <div className="overflow-x-auto rounded-xl border border-stripe-border bg-linen">
       <Table>
         <TableHeader>
-          <TableRow className="border-oat hover:bg-transparent">
+          <TableRow className="border-stripe-border hover:bg-transparent">
             <TableHead className="text-espresso">Line item</TableHead>
             {displaySuppliers.map((id) => (
               <TableHead key={id} className="min-w-[140px] text-espresso">
@@ -104,7 +104,7 @@ export function CompareTable({
                       {id === fallbackSupplierId && (
                         <Badge
                           variant="outline"
-                          className="border-oat text-cocoa"
+                          className="border-stripe-border text-cocoa"
                         >
                           Reserve
                         </Badge>
@@ -118,7 +118,7 @@ export function CompareTable({
         </TableHeader>
         <TableBody>
           {comparison.matrix.map((row) => (
-            <TableRow key={row.sku} className="border-oat">
+            <TableRow key={row.sku} className="border-stripe-border">
               <TableCell className="font-medium text-espresso">
                 {row.name}
                 <span className="ml-2 font-mono text-xs text-cocoa">
@@ -162,7 +162,7 @@ export function CompareTable({
             </TableRow>
           ))}
           {showLandedTotals && (
-            <TableRow className="border-oat bg-cream/80 font-medium">
+            <TableRow className="border-stripe-border bg-cream/80 font-medium">
               <TableCell className="text-espresso">Order landed total</TableCell>
               {displaySuppliers.map((id) => (
                 <TableCell key={id} className="font-mono text-espresso">
@@ -174,7 +174,7 @@ export function CompareTable({
         </TableBody>
       </Table>
       {comparison.warnings.length > 0 && (
-        <div className="border-t border-oat px-4 py-3">
+        <div className="border-t border-stripe-border px-4 py-3">
           {comparison.warnings.map((w) => (
             <Badge
               key={w}

@@ -27,7 +27,7 @@ export function OrderPipelineStepper({ current }: { current: OrderStage }) {
                 className={cn(
                   "flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
                   done && "border-sage bg-sage text-linen",
-                  active && !done && "border-espresso bg-espresso text-linen",
+                  active && !done && "border-indigo-accent bg-indigo-accent text-white",
                   !done && !active && "border-oat bg-linen text-cocoa",
                 )}
               >

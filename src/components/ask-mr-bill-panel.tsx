@@ -27,8 +27,8 @@ export function AskMrBillPanel({
   apiError,
 }: AskMrBillPanelProps) {
   return (
-    <aside className="flex flex-col rounded-xl border border-oat bg-linen card-shadow lg:max-w-sm">
-      <div className="border-b border-oat px-4 py-3">
+    <aside className="flex flex-col rounded-xl border border-stripe-border bg-linen card-shadow lg:max-w-sm">
+      <div className="border-b border-stripe-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-sage" strokeWidth={1.75} />
           <h2 className="font-display text-base font-semibold text-espresso">
@@ -76,7 +76,7 @@ export function AskMrBillPanel({
         <Textarea
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
-          className="min-h-[120px] border-oat bg-cream text-sm"
+          className="min-h-[120px] border-stripe-border bg-cream text-sm"
           placeholder="e.g. Maadi low on oat milk and cups before Friday; Zamalek needs 2kg espresso."
           disabled={loading}
         />
@@ -84,7 +84,7 @@ export function AskMrBillPanel({
         <Button
           type="button"
           variant="outline"
-          className="border-oat bg-cream hover:bg-oat/40"
+          className="border-stripe-border bg-cream hover:bg-oat/40"
           onClick={onParse}
           disabled={loading || !draft.trim()}
         >
@@ -97,7 +97,7 @@ export function AskMrBillPanel({
         </Button>
 
         {lastAssistantNote && (
-          <div className="rounded-lg border border-oat bg-cream p-3">
+          <div className="rounded-lg border border-stripe-border bg-cream p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-cocoa">
               Agent note
             </p>

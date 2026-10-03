@@ -248,7 +248,7 @@ export function NewOrderWorkspace() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6 rounded-xl border border-oat bg-linen p-4 card-shadow md:p-6">
+        <div className="space-y-6 rounded-xl border border-stripe-border bg-linen p-4 card-shadow md:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-xs font-medium uppercase text-cocoa">
@@ -258,7 +258,7 @@ export function NewOrderWorkspace() {
                 value={branchId}
                 onValueChange={(v) => setBranchId(v as BranchId)}
               >
-                <SelectTrigger className="border-oat bg-cream">
+                <SelectTrigger className="border-stripe-border bg-cream">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -277,7 +277,7 @@ export function NewOrderWorkspace() {
               <Input
                 value={neededBy}
                 onChange={(e) => setNeededBy(e.target.value)}
-                className="border-oat bg-cream"
+                className="border-stripe-border bg-cream"
               />
             </div>
           </div>
@@ -291,7 +291,7 @@ export function NewOrderWorkspace() {
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-oat"
+                className="border-stripe-border"
                 onClick={() => setLines((prev) => [...prev, emptyLine(branchId)])}
               >
                 <Plus className="mr-1 size-4" />
@@ -299,10 +299,10 @@ export function NewOrderWorkspace() {
               </Button>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-oat">
+            <div className="overflow-x-auto rounded-lg border border-stripe-border">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-oat hover:bg-transparent">
+                  <TableRow className="border-stripe-border hover:bg-transparent">
                     <TableHead className="text-espresso">SKU</TableHead>
                     <TableHead className="text-espresso">Item</TableHead>
                     <TableHead className="text-espresso">Qty</TableHead>
@@ -324,14 +324,14 @@ export function NewOrderWorkspace() {
                     </TableRow>
                   ) : (
                     lines.map((line, idx) => (
-                      <TableRow key={idx} className="border-oat">
+                      <TableRow key={idx} className="border-stripe-border">
                         <TableCell>
                           <Input
                             value={line.sku}
                             onChange={(e) =>
                               updateLine(idx, { sku: e.target.value })
                             }
-                            className="h-8 font-mono text-xs border-oat bg-cream"
+                            className="h-8 font-mono text-xs border-stripe-border bg-cream"
                             placeholder="OAT-1L"
                           />
                         </TableCell>
@@ -341,7 +341,7 @@ export function NewOrderWorkspace() {
                             onChange={(e) =>
                               updateLine(idx, { name: e.target.value })
                             }
-                            className="h-8 border-oat bg-cream"
+                            className="h-8 border-stripe-border bg-cream"
                           />
                         </TableCell>
                         <TableCell>
@@ -354,7 +354,7 @@ export function NewOrderWorkspace() {
                                 qty: Number(e.target.value) || 1,
                               })
                             }
-                            className="h-8 w-20 border-oat bg-cream"
+                            className="h-8 w-20 border-stripe-border bg-cream"
                           />
                         </TableCell>
                         <TableCell>
@@ -363,7 +363,7 @@ export function NewOrderWorkspace() {
                             onChange={(e) =>
                               updateLine(idx, { unit: e.target.value })
                             }
-                            className="h-8 w-24 border-oat bg-cream"
+                            className="h-8 w-24 border-stripe-border bg-cream"
                           />
                         </TableCell>
                         <TableCell>
@@ -373,7 +373,7 @@ export function NewOrderWorkspace() {
                               updateLine(idx, { branchId: v as BranchId })
                             }
                           >
-                            <SelectTrigger className="h-8 border-oat bg-cream">
+                            <SelectTrigger className="h-8 border-stripe-border bg-cream">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -404,7 +404,7 @@ export function NewOrderWorkspace() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-oat pt-4">
+          <div className="flex flex-wrap gap-2 border-t border-stripe-border pt-4">
             <DiscoveredSuppliersPanel
               lineItems={lines.filter((l) => l.sku && l.name)}
               selectedIds={selectedSupplierIds}
@@ -415,11 +415,11 @@ export function NewOrderWorkspace() {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-oat pt-4">
+          <div className="flex flex-wrap gap-2 border-t border-stripe-border pt-4">
             <Button
               type="button"
               variant="outline"
-              className="border-oat"
+              className="border-stripe-border"
               disabled={
                 lines.filter((l) => l.sku && l.name).length === 0 ||
                 loading ||
@@ -431,7 +431,7 @@ export function NewOrderWorkspace() {
             </Button>
             <Button
               type="button"
-              className="bg-espresso text-linen"
+              className="bg-primary text-primary-foreground"
               disabled={!canSendRfq || loading}
               onClick={() => void handleSendRfqs()}
             >
@@ -457,7 +457,7 @@ export function NewOrderWorkspace() {
             {agentSession.rfqId && (
               <Link
                 href={`/app/orders/${agentSession.requestId}`}
-                className={cn(buttonVariants({ variant: "outline" }), "border-oat")}
+                className={cn(buttonVariants({ variant: "outline" }), "border-stripe-border")}
               >
                 View order desk
               </Link>

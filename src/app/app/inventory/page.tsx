@@ -33,10 +33,10 @@ export default function InventoryPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-oat bg-linen card-shadow">
+      <div className="overflow-hidden rounded-xl border border-stripe-border bg-linen card-shadow">
         <Table>
           <TableHeader>
-            <TableRow className="border-oat hover:bg-transparent">
+            <TableRow className="border-stripe-border hover:bg-transparent">
               <TableHead>Branch</TableHead>
               <TableHead>SKU</TableHead>
               <TableHead>Item</TableHead>
@@ -48,7 +48,7 @@ export default function InventoryPage() {
             {rows.map((row) => {
               const low = row.qty < row.parLevel;
               return (
-                <TableRow key={`${row.branchId}-${row.sku}`} className="border-oat">
+                <TableRow key={`${row.branchId}-${row.sku}`} className="border-stripe-border">
                   <TableCell className="text-cocoa">
                     {branchName(row.branchId)}
                   </TableCell>
@@ -76,7 +76,7 @@ export default function InventoryPage() {
         </Table>
       </div>
 
-      <Card className="border-oat bg-linen">
+      <Card className="border-stripe-border bg-linen">
         <CardHeader>
           <CardTitle className="font-display text-lg text-espresso">
             Audit log
@@ -86,7 +86,7 @@ export default function InventoryPage() {
           {audit.length <= 1 ? (
             <p className="py-4 text-center text-sm text-cocoa">
               No order approvals yet. Approve a recommendation on an{" "}
-              <Link href="/app/orders" className="text-terracotta underline">
+              <Link href="/app/orders" className="text-indigo-accent underline">
                 order
               </Link>{" "}
               to see inventory deltas here.
