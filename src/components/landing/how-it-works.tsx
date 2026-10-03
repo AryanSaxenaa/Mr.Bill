@@ -11,8 +11,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STEP_MS = 4200;
-
 const STEPS: {
   title: string;
   body: string;
@@ -50,61 +48,62 @@ const STEPS: {
   },
 ];
 
+/** 0–1 scroll progress through the section (drives step + bar). */
+function scrollProgressThroughSection(section: HTMLElement): number {
+  const rect = section.getBoundingClientRect();
+  const vh = window.innerHeight;
+  const start = vh * 0.72;
+  const end = vh * 0.28;
+  const span = rect.height + (start - end);
+  if (span <= 0) return 0;
+  const traveled = start - rect.top;
+  return Math.min(1, Math.max(0, traveled / span));
+}
+
 export function LandingHowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [progressWidth, setProgressWidth] = useState(0);
 
   useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const applyScroll = () => {
+      const progress = scrollProgressThroughSection(section);
+      const n = STEPS.length;
+      const scaled = progress * n;
+      const idx = Math.min(n - 1, Math.floor(scaled));
+      const segment = scaled - idx;
+
+      setActiveIndex(idx);
+      setProgressWidth(((idx + segment) / n) * 100);
+
+      if (progress > 0.02) setInView(true);
+    };
+
+    applyScroll();
+    window.addEventListener("scroll", applyScroll, { passive: true });
+    window.addEventListener("resize", applyScroll, { passive: true });
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) setInView(true);
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!inView) return;
-
-    const pctForStep = (index: number) =>
-      ((index + 1) / STEPS.length) * 100;
-
-    setActiveIndex(0);
-    setProgressWidth(0);
-    const startTimer = window.setTimeout(() => {
-      setProgressWidth(pctForStep(0));
-    }, 50);
-
-    const tick = window.setInterval(() => {
-      setActiveIndex((current) => {
-        const next = (current + 1) % STEPS.length;
-        const bar = progressRef.current;
-        if (next === 0 && bar) {
-          bar.classList.add("transition-none");
-          setProgressWidth(0);
-          window.requestAnimationFrame(() => {
-            bar.classList.remove("transition-none");
-            setProgressWidth(pctForStep(0));
-          });
-        } else {
-          setProgressWidth(pctForStep(next));
+        if (entry?.isIntersecting) {
+          setInView(true);
+          applyScroll();
         }
-        return next;
-      });
-    }, STEP_MS);
+      },
+      { threshold: 0, rootMargin: "0px 0px -5% 0px" },
+    );
+    observer.observe(section);
 
     return () => {
-      window.clearTimeout(startTimer);
-      window.clearInterval(tick);
+      window.removeEventListener("scroll", applyScroll);
+      window.removeEventListener("resize", applyScroll);
+      observer.disconnect();
     };
-  }, [inView]);
+  }, []);
 
   return (
     <section
@@ -127,21 +126,20 @@ export function LandingHowItWorks() {
         </div>
 
         <div className="relative mt-12 md:mt-16">
+          {/* Track sits behind icons (z-0), centered on icon row */}
           <div
-            className="absolute left-0 right-0 top-[2.75rem] hidden h-0.5 bg-stripe-border md:block"
+            className="pointer-events-none absolute inset-x-4 top-7 z-0 hidden h-0.5 md:block"
             aria-hidden
-          />
-          <div
-            ref={progressRef}
-            className={cn(
-              "absolute left-0 top-[2.75rem] hidden h-0.5 origin-left bg-gradient-to-r from-indigo-accent to-cyan-accent md:block",
-              "transition-[width] ease-linear motion-safe:duration-[4200ms]",
-            )}
-            style={{ width: `${progressWidth}%` }}
-            aria-hidden
-          />
+          >
+            <div className="relative h-full w-full rounded-full bg-stripe-border">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-accent to-cyan-accent will-change-[width]"
+                style={{ width: `${progressWidth}%` }}
+              />
+            </div>
+          </div>
 
-          <ol className="grid gap-8 sm:grid-cols-2 md:grid-cols-5 md:gap-4">
+          <ol className="relative z-10 grid gap-8 sm:grid-cols-2 md:grid-cols-5 md:gap-4">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               const isActive = index === activeIndex;
@@ -150,26 +148,26 @@ export function LandingHowItWorks() {
                 <li
                   key={step.title}
                   className={cn(
-                    "relative flex flex-col items-center text-center transition-all duration-700 motion-reduce:transition-none",
+                    "relative flex flex-col items-center text-center transition-all duration-500 motion-reduce:transition-none",
                     inView
                       ? "translate-y-0 opacity-100"
-                      : "translate-y-4 opacity-0",
+                      : "translate-y-3 opacity-0",
                   )}
                   style={{
-                    transitionDelay: inView ? `${index * 90}ms` : "0ms",
+                    transitionDelay: inView ? `${index * 60}ms` : "0ms",
                   }}
                 >
                   <div
                     className={cn(
-                      "relative z-10 flex size-14 items-center justify-center rounded-2xl border bg-linen card-shadow transition-all duration-700 motion-reduce:transition-none",
+                      "relative z-10 box-border flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 bg-white shadow-sm transition-all duration-300 motion-reduce:transition-none",
                       isActive &&
-                        "scale-110 border-indigo-accent bg-white text-indigo-accent shadow-lg shadow-indigo-accent/15 ring-2 ring-indigo-accent/25",
+                        "scale-105 border-indigo-accent text-indigo-accent shadow-md shadow-indigo-accent/20",
                       !isActive &&
                         isPast &&
-                        "border-sage/50 bg-sage/5 text-sage",
+                        "border-sage text-sage",
                       !isActive &&
                         !isPast &&
-                        "border-stripe-border text-cocoa/70",
+                        "border-stripe-border text-cocoa/60",
                     )}
                   >
                     <Icon className="size-6" strokeWidth={1.75} aria-hidden />
@@ -177,7 +175,7 @@ export function LandingHowItWorks() {
                   <p
                     className={cn(
                       "mt-4 font-display text-sm font-semibold md:text-[15px]",
-                      isActive ? "text-navy" : "text-cocoa/80",
+                      isActive ? "text-navy" : "text-cocoa/75",
                     )}
                   >
                     <span className="mr-1.5 font-mono text-xs text-cocoa">
@@ -187,10 +185,10 @@ export function LandingHowItWorks() {
                   </p>
                   <p
                     className={cn(
-                      "mt-2 max-w-[240px] text-sm leading-relaxed transition-all duration-700 motion-reduce:transition-none",
+                      "mt-2 max-w-[240px] text-sm leading-relaxed transition-opacity duration-300",
                       isActive
                         ? "text-cocoa opacity-100"
-                        : "text-cocoa/60 opacity-80 max-md:hidden",
+                        : "text-cocoa/55 opacity-90 max-md:hidden",
                     )}
                   >
                     {step.body}
@@ -201,7 +199,7 @@ export function LandingHowItWorks() {
           </ol>
 
           <div
-            className="mt-8 rounded-2xl border border-stripe-border bg-linen px-5 py-4 text-center md:hidden"
+            className="relative z-10 mt-8 rounded-2xl border border-stripe-border bg-linen px-5 py-4 text-center md:hidden"
             aria-live="polite"
           >
             <p className="font-display text-sm font-semibold text-navy">
