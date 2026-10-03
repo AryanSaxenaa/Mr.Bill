@@ -149,7 +149,7 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8" data-tour="order-detail">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
@@ -294,6 +294,7 @@ export default function OrderDetailPage() {
               <Button
                 type="button"
                 className="bg-terracotta text-linen hover:bg-terracotta/90"
+                data-tour="approve"
                 onClick={() => void handleApprove()}
                 disabled={loading}
               >

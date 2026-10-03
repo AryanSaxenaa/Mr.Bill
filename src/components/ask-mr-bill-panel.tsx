@@ -34,7 +34,10 @@ export function AskMrBillPanel({
     : null;
 
   return (
-    <aside className="flex flex-col rounded-xl border border-stripe-border bg-linen card-shadow lg:max-w-sm">
+    <aside
+      className="flex flex-col rounded-xl border border-stripe-border bg-linen card-shadow lg:max-w-sm"
+      data-tour="ask-mrbill"
+    >
       <div className="border-b border-stripe-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-sage" strokeWidth={1.75} />
@@ -95,6 +98,7 @@ export function AskMrBillPanel({
           className="bg-primary text-primary-foreground"
           onClick={onRunDemoScript}
           disabled={loading}
+          data-tour="run-demo"
         >
           {loading ? (
             <Loader2 className="mr-2 size-4 animate-spin" />

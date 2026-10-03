@@ -36,7 +36,7 @@ export default function QuotesPage() {
   const rfqLabel = agentSession.rfqId ?? "No RFQ - start from New order";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8" data-tour="quote-desk">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-sage">Quote desk</p>

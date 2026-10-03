@@ -149,6 +149,7 @@ export function LandingHero() {
                   <Link
                     className="group mb-4 inline-flex w-full items-center justify-center rounded-lg px-4 py-[11px] text-sm font-medium whitespace-nowrap shadow-lg transition-all bg-linear-to-t from-indigo-accent to-indigo-accent/85 bg-[length:100%_100%] bg-[bottom] text-white hover:bg-[length:100%_150%] sm:mb-0 sm:w-auto"
                     href="/app/orders"
+                    data-tour="open-desk"
                   >
                     <span className="relative inline-flex items-center">
                       Open order desk

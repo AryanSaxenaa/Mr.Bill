@@ -33,7 +33,10 @@ export default function InventoryPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-stripe-border bg-linen card-shadow">
+      <div
+        className="overflow-hidden rounded-xl border border-stripe-border bg-linen card-shadow"
+        data-tour="inventory"
+      >
         <Table>
           <TableHeader>
             <TableRow className="border-stripe-border hover:bg-transparent">
@@ -76,7 +79,7 @@ export default function InventoryPage() {
         </Table>
       </div>
 
-      <Card className="border-stripe-border bg-linen">
+      <Card className="border-stripe-border bg-linen" data-tour="audit">
         <CardHeader>
           <CardTitle className="font-display text-lg text-espresso">
             Audit log

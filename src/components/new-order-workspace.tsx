@@ -257,7 +257,10 @@ export function NewOrderWorkspace() {
     agentSession.quoteIds.length >= 2 && Boolean(agentSession.comparisonId);
 
   return (
-    <div className="mx-auto max-w-6xl min-w-0 space-y-6 overflow-x-hidden">
+    <div
+      className="mx-auto max-w-6xl min-w-0 space-y-6 overflow-x-hidden"
+      data-tour="new-order-workspace"
+    >
       <div>
         <p className="text-sm font-medium text-sage">New order</p>
         <h1 className="font-display text-3xl font-semibold text-espresso">
@@ -303,7 +306,7 @@ export function NewOrderWorkspace() {
             </div>
           </div>
 
-          <div>
+          <div data-tour="line-items">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-lg font-semibold text-espresso">
                 Line items
@@ -466,6 +469,7 @@ export function NewOrderWorkspace() {
               type="button"
               className="bg-primary text-primary-foreground"
               disabled={!canSendRfq || loading}
+              data-tour="send-rfq"
               onClick={() => void handleSendRfqs()}
             >
               {loading ? (

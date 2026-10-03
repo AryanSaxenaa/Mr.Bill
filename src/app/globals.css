@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "shepherd.js/dist/css/shepherd.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -257,4 +258,106 @@
       transform: translateY(-5%);
     }
   }
+}
+
+/* Mr.Bill Shepherd.js theme: navy, linen, indigo accent */
+.shepherd-element.mrbill-tour {
+  background: #ffffff;
+  border: 1px solid #e6ebf1;
+  border-radius: 0.625rem;
+  box-shadow:
+    0 1px 1px rgba(10, 37, 64, 0.04),
+    0 8px 28px rgba(10, 37, 64, 0.16);
+  color: #0a2540;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  max-width: 22rem;
+}
+
+.shepherd-element.mrbill-tour .shepherd-content {
+  border-radius: 0.625rem;
+}
+
+.shepherd-element.mrbill-tour.shepherd-has-title .shepherd-content .shepherd-header {
+  background: #0a2540;
+  border-top-left-radius: 0.625rem;
+  border-top-right-radius: 0.625rem;
+  padding: 0.85rem 1rem;
+}
+
+.shepherd-element.mrbill-tour .shepherd-title {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.shepherd-element.mrbill-tour.shepherd-has-title .shepherd-content .shepherd-cancel-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.shepherd-element.mrbill-tour.shepherd-has-title .shepherd-content .shepherd-cancel-icon:hover {
+  color: #ffffff;
+}
+
+.shepherd-element.mrbill-tour .shepherd-text {
+  color: #425466;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  padding: 0.9rem 1rem;
+}
+
+.shepherd-element.mrbill-tour .shepherd-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  padding: 0 1rem 0.9rem;
+}
+
+.shepherd-element.mrbill-tour .shepherd-button {
+  background: #635bff;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 0.4rem 0.85rem;
+  transition: background 150ms ease;
+}
+
+.shepherd-element.mrbill-tour .shepherd-button:not(:disabled):hover {
+  background: #5147ea;
+  color: #ffffff;
+}
+
+.shepherd-element.mrbill-tour .shepherd-button.shepherd-button-secondary {
+  background: #ffffff;
+  border: 1px solid #e6ebf1;
+  color: #425466;
+}
+
+.shepherd-element.mrbill-tour .shepherd-button.shepherd-button-secondary:not(:disabled):hover {
+  background: #f6f9fc;
+  color: #0a2540;
+}
+
+.shepherd-element.mrbill-tour .mrbill-tour-skip {
+  margin-right: auto;
+}
+
+.shepherd-element.mrbill-tour > .shepherd-arrow:before {
+  background: #ffffff;
+}
+
+.shepherd-element.mrbill-tour.shepherd-has-title[data-popper-placement^="bottom"]
+  > .shepherd-arrow:before {
+  background-color: #0a2540;
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  opacity: 0.55;
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible path {
+  fill: #0a2540;
 }

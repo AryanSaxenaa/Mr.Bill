@@ -231,7 +231,10 @@ export function DiscoveredSuppliersPanel({
   const info = localMessage ?? searchMessage;
 
   return (
-    <div className="max-w-full space-y-3 overflow-x-hidden rounded-xl border border-stripe-border bg-cream/40 p-4 card-shadow">
+    <div
+      className="max-w-full space-y-3 overflow-x-hidden rounded-xl border border-stripe-border bg-cream/40 p-4 card-shadow"
+      data-tour="suppliers"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-display text-lg font-semibold text-espresso">
@@ -246,6 +249,7 @@ export function DiscoveredSuppliersPanel({
           variant="outline"
           className="shrink-0 border-sage text-sage hover:bg-sage/10"
           disabled={disabled || loading || lineItems.filter((l) => l.name).length === 0}
+          data-tour="discover-vendors"
           onClick={() => void runSearch()}
         >
           {loading ? (

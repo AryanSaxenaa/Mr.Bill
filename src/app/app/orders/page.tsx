@@ -61,7 +61,10 @@ export default function OrdersPage() {
   }, [activeId, activeStage, agentSession.lineItems.length, agentSession.rfqId]);
 
   return (
-    <div className="mx-auto max-w-5xl min-w-0 space-y-8 overflow-x-hidden">
+    <div
+      className="mx-auto max-w-5xl min-w-0 space-y-8 overflow-x-hidden"
+      data-tour="orders-desk"
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold text-espresso">
@@ -73,6 +76,7 @@ export default function OrdersPage() {
         </div>
         <Link
           href="/app/orders/new"
+          data-tour="new-order"
           className={buttonVariants()}
         >
           <PackagePlus className="mr-2 size-4" />

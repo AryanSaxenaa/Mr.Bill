@@ -27,6 +27,7 @@ export function LandingCta() {
             <Link
               className="inline-flex w-full items-center justify-center rounded-lg border border-white/30 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
               href="/app/orders"
+              data-tour="open-desk"
             >
               Open order desk
             </Link>

@@ -22,13 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { TourLaunchButton } from "@/components/tour/tour-launch-button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/app/orders", label: "Orders", icon: ClipboardList },
-  { href: "/app/orders/new", label: "New order", icon: PlusCircle },
-  { href: "/app/quotes", label: "Quote desk", icon: Table2 },
-  { href: "/app/inventory", label: "Inventory", icon: Package },
+  { href: "/app/orders", label: "Orders", icon: ClipboardList, tour: "nav-orders" },
+  { href: "/app/orders/new", label: "New order", icon: PlusCircle, tour: "nav-new-order" },
+  { href: "/app/quotes", label: "Quote desk", icon: Table2, tour: "nav-quotes" },
+  { href: "/app/inventory", label: "Inventory", icon: Package, tour: "nav-inventory" },
 ];
 
 const RESET_TOAST_KEY = "mrbill-reset-toast";
@@ -72,7 +73,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-surface">
-      <aside className="hidden w-60 shrink-0 border-r border-stripe-border bg-linen md:flex md:flex-col">
+      <aside
+        data-tour="sidebar"
+        className="hidden w-60 shrink-0 border-r border-stripe-border bg-linen md:flex md:flex-col"
+      >
         <Link
           href="/"
           className="flex items-center gap-2 border-b border-stripe-border px-5 py-5 transition hover:bg-surface/50"
@@ -98,6 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                data-tour={item.tour}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                   active
@@ -148,11 +153,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Maison Layla · chat to vendor to quote - no spreadsheet chaos
           </p>
           <div className="flex flex-wrap items-center gap-2">
+            <TourLaunchButton className="h-8 px-3 text-[0.8rem]" />
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="border-stripe-border bg-surface text-cocoa"
+              data-tour="reset-demo"
               onClick={handleReset}
             >
               Reset demo data
@@ -187,6 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={item.tour}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium",
                     active
@@ -224,6 +232,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  data-tour={item.tour}
                   className={cn(
                     "flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-medium",
                     active ? "text-indigo-accent" : "text-cocoa",

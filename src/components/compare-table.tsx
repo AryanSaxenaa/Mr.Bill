@@ -85,7 +85,10 @@ export function CompareTable({
   }, [comparison.matrix, displaySuppliers]);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-stripe-border bg-linen">
+    <div
+      className="overflow-x-auto rounded-xl border border-stripe-border bg-linen"
+      data-tour="quotes-table"
+    >
       <Table>
         <TableHeader>
           <TableRow className="border-stripe-border hover:bg-transparent">

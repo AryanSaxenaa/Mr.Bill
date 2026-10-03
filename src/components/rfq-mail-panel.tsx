@@ -108,7 +108,10 @@ export function RfqMailPanel() {
   const liveCount = deliveries.filter((d) => d.mode === "agentmail").length;
 
   return (
-    <Card className="border-stripe-border bg-linen card-shadow">
+    <Card
+      className="border-stripe-border bg-linen card-shadow"
+      data-tour="sent-mail"
+    >
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
         <div>
           <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
