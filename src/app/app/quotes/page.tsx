@@ -9,6 +9,7 @@ import { MOCK_QUOTES, supplierName } from "@/lib/mock-data";
 import { recommend } from "@/lib/agent-tools";
 import { useAppState } from "@/lib/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasteQuoteReply } from "@/components/paste-quote-reply";
 
 export default function QuotesPage() {
   const { requestStatus, agentSession } = useAppState();
@@ -59,6 +60,8 @@ export default function QuotesPage() {
           </div>
         )}
       </div>
+
+      <PasteQuoteReply />
 
       {!quotesReady && (
         <Card className="border-oat bg-linen">

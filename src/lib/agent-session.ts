@@ -7,6 +7,7 @@ export interface AgentSession {
   neededBy: string;
   deliveryBranch: string;
   rfqId?: string;
+  rfqMessages?: { supplierId: string; body: string }[];
   quoteIds: string[];
   comparisonId?: string;
   recommendation?: RecommendOutput;

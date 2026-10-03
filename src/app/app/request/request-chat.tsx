@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CompareTable } from "@/components/compare-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DEMO_INTAKE_TEXT,
   branchName,
@@ -21,7 +22,8 @@ import {
   type AgentUiHints,
 } from "@/lib/agent-session";
 import type { InventoryDelta } from "@/lib/agent-tools";
-import { Check, Loader2, Play, Send } from "lucide-react";
+import { Check, Loader2, Play, Send, FileText } from "lucide-react";
+import { supplierName } from "@/lib/mock-data";
 
 type MessageRole = "user" | "assistant";
 
@@ -41,6 +43,10 @@ interface AgentApiSuccess {
   mode?: "demo" | "live";
   error?: string;
   code?: string;
+  llmFallback?: boolean;
+  llmFallbackReason?: string;
+  llmRetriedFrom?: string;
+  llmProvider?: string;
 }
 
 export function RequestChat() {
@@ -69,6 +75,7 @@ export function RequestChat() {
   });
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [llmNotice, setLlmNotice] = useState<string | null>(null);
   const [agentMode, setAgentMode] = useState<"demo" | "live" | null>(null);
   const [step, setStep] = useState<"active" | "done">(
     requestStatus === "approved" ? "done" : "active",
@@ -120,6 +127,19 @@ export function RequestChat() {
       setUi(data.ui);
       if (data.mode) {
         setAgentMode(data.mode);
+      }
+
+      if (data.llmFallback) {
+        setLlmNotice(
+          `demo-fallback:${data.llmFallbackReason ?? "LLM unavailable"}`,
+        );
+      } else if (
+        data.llmRetriedFrom === "openrouter" &&
+        data.llmProvider === "deepseek"
+      ) {
+        setLlmNotice("deepseek-retry:ok");
+      } else {
+        setLlmNotice(null);
       }
 
       if (data.session.status === "rfq_sent" || data.session.rfqId) {
@@ -335,6 +355,22 @@ export function RequestChat() {
         </div>
       )}
 
+      {llmNotice && (
+        <div
+          className={cn(
+            "rounded-lg border px-4 py-3 text-sm text-espresso",
+            llmNotice.startsWith("deepseek-retry:")
+              ? "border-sage/40 bg-sage/10"
+              : "border-terracotta/40 bg-terracotta/10",
+          )}
+          role="status"
+        >
+          {llmNotice.startsWith("deepseek-retry:")
+            ? "OpenRouter failed — retried with DeepSeek successfully for this turn."
+            : `Live LLM unavailable (${llmNotice.replace("demo-fallback:", "")}). Showing demo agent responses for this turn.`}
+        </div>
+      )}
+
       {apiError && (
         <div
           className="rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-espresso"
@@ -464,6 +500,32 @@ export function RequestChat() {
           )}
         </div>
       </div>
+
+      {agentSession.rfqMessages && agentSession.rfqMessages.length > 0 && (
+        <Card className="card-shadow border-oat bg-linen">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
+              <FileText className="size-5 text-sage" />
+              RFQ messages sent (simulated)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {agentSession.rfqMessages.map((msg) => (
+              <div
+                key={msg.supplierId}
+                className="rounded-lg border border-oat bg-cream p-3"
+              >
+                <p className="text-sm font-medium text-espresso">
+                  {supplierName(msg.supplierId)}
+                </p>
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-xs text-cocoa">
+                  {msg.body}
+                </pre>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

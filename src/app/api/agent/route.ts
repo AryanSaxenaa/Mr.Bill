@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import type OpenAI from "openai";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent-prompt";
 import {
-  createLlmClient,
-  getLlmModel,
+  chatCompletionWithResilience,
   hasLiveLlmConfig,
   resolveLlmProvider,
 } from "@/lib/llm-client";
@@ -34,6 +33,7 @@ interface AgentRequestBody {
   session?: AgentSession;
   inventory?: { branchId: string; sku: string; qty: number }[];
   confirmAction?: "send_rfq" | "approve";
+  parseQuote?: { supplierId: string; rawText: string };
 }
 
 function intakeHeuristic(message: string, session: AgentSession): AgentSession {
@@ -76,8 +76,71 @@ export async function POST(req: Request) {
   }
 
   const message = body.message?.trim();
-  if (!message && !body.confirmAction) {
+  if (!message && !body.confirmAction && !body.parseQuote) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
+  }
+
+  if (body.parseQuote?.rawText?.trim()) {
+    let session: AgentSession = body.session ?? { ...DEFAULT_SESSION };
+    const inventory = body.inventory ?? [];
+    const toolTrace: { name: string; summary: string }[] = [];
+    const supplierId = body.parseQuote.supplierId || "cairo-dairy";
+    const rawText = body.parseQuote.rawText.trim();
+
+    const { session: s1, result: parsed } = executeAgentTool(
+      "parse_quote_reply",
+      {
+        rfq_id: session.rfqId,
+        supplier_id: supplierId,
+        raw_text: rawText,
+      },
+      session,
+      inventory,
+    );
+    session = s1;
+    toolTrace.push({ name: parsed.name, summary: parsed.summary });
+
+    if (session.quoteIds.length >= 2) {
+      const { session: s2, result: cmp } = executeAgentTool(
+        "compare_quotes",
+        {
+          request_id: session.requestId,
+          quote_ids: session.quoteIds,
+        },
+        session,
+        inventory,
+      );
+      session = s2;
+      toolTrace.push({ name: cmp.name, summary: cmp.summary });
+
+      const { session: s3, result: rec } = executeAgentTool(
+        "recommend",
+        {
+          request_id: session.requestId,
+          comparison_id: session.comparisonId,
+        },
+        session,
+        inventory,
+      );
+      session = s3;
+      toolTrace.push({ name: rec.name, summary: rec.summary });
+
+      return NextResponse.json({
+        assistantMessage: `Parsed reply from ${supplierId}. ${rec.summary}`,
+        session,
+        toolTrace,
+        ui: uiHintsFromSession(session),
+        mode: hasLiveLlmConfig() ? "live" : "demo",
+      });
+    }
+
+    return NextResponse.json({
+      assistantMessage: parsed.summary,
+      session,
+      toolTrace,
+      ui: uiHintsFromSession(session),
+      mode: hasLiveLlmConfig() ? "live" : "demo",
+    });
   }
 
   if (!hasLiveLlmConfig()) {
@@ -179,17 +242,9 @@ export async function POST(req: Request) {
   session = intakeHeuristic(message ?? "", session);
 
   const history = body.history ?? [];
-  let provider: ReturnType<typeof resolveLlmProvider>;
-  let model: string;
-  let openai: ReturnType<typeof createLlmClient>;
 
   try {
-    provider = resolveLlmProvider();
-    if (!provider) {
-      throw new Error("No LLM provider configured");
-    }
-    model = getLlmModel(provider);
-    openai = createLlmClient();
+    resolveLlmProvider();
   } catch (err) {
     console.error("Agent LLM client setup failed:", err);
     const demo = runDemoAgent({
@@ -198,7 +253,7 @@ export async function POST(req: Request) {
       session: body.session,
       inventory: body.inventory,
     });
-    return NextResponse.json({ ...demo, llmFallback: true });
+    return NextResponse.json({ ...demo, llmFallback: true, llmFallbackReason: "no_provider" });
   }
 
   const sessionContext = `Current session JSON: ${JSON.stringify({
@@ -229,16 +284,22 @@ export async function POST(req: Request) {
 
   let assistantText = "";
   let rounds = 0;
+  let llmProviderUsed: ReturnType<typeof resolveLlmProvider> | undefined;
+  let llmRetriedFrom: ReturnType<typeof resolveLlmProvider> | undefined;
 
   try {
     while (rounds < MAX_TOOL_ROUNDS) {
       rounds += 1;
-      const completion = await openai.chat.completions.create({
-        model,
-        messages,
-        tools: OPENAI_TOOL_DEFINITIONS,
-        tool_choice: "auto",
-      });
+      const { completion, provider, retriedFrom } =
+        await chatCompletionWithResilience({
+          messages,
+          tools: OPENAI_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        });
+      llmProviderUsed = provider;
+      if (retriedFrom) {
+        llmRetriedFrom = retriedFrom;
+      }
 
       const choice = completion.choices[0]?.message;
       if (!choice) {
@@ -315,10 +376,12 @@ export async function POST(req: Request) {
       }
 
       if (toolCalls.length > 0 && !assistantText) {
-        const followUp = await openai.chat.completions.create({
-          model,
-          messages,
-        });
+        const { completion: followUp, provider: followProvider, retriedFrom } =
+          await chatCompletionWithResilience({ messages });
+        llmProviderUsed = followProvider;
+        if (retriedFrom) {
+          llmRetriedFrom = retriedFrom;
+        }
         assistantText =
           followUp.choices[0]?.message?.content ??
           toolTrace.map((t) => t.summary).join("\n");
@@ -381,6 +444,8 @@ export async function POST(req: Request) {
       inventoryDeltas,
       ui: uiHintsFromSession(session),
       mode: "live",
+      llmProvider: llmProviderUsed,
+      llmRetriedFrom: llmRetriedFrom ?? undefined,
     });
   } catch (err) {
     console.error("Agent LLM request failed:", err);
@@ -390,6 +455,11 @@ export async function POST(req: Request) {
       session: body.session,
       inventory: body.inventory,
     });
-    return NextResponse.json({ ...demo, llmFallback: true });
+    return NextResponse.json({
+      ...demo,
+      llmFallback: true,
+      llmFallbackReason:
+        err instanceof Error ? err.message : "LLM request failed",
+    });
   }
 }

@@ -7,6 +7,24 @@ Open-source procurement agent for food & beverage SMEs — multi-branch café re
 
 **Repository:** [github.com/AryanSaxenaa/Mr.Bill](https://github.com/AryanSaxenaa/Mr.Bill)
 
+## Hackathon submission
+
+**Repo:** [github.com/AryanSaxenaa/Mr.Bill](https://github.com/AryanSaxenaa/Mr.Bill) · **License:** MIT (`LICENSE`)
+
+| Deliverable | Notes |
+|-------------|--------|
+| Demo video | 2–3 min screen capture using the judge table below |
+| Untap / Agents at Work | Professional track · impact copy in project Context `docs/impact-slides.md` |
+| Live vs demo | `GET /api/agent/config` — OpenRouter with DeepSeek fallback on chat failure; keyless demo script still works |
+| Scope | In: intake, RFQ drafts, paste-parse quotes, compare, recommend, inventory · Out: payments, freight, WhatsApp API |
+
+### Submission checklist
+
+- [ ] Record judge run (table below) including **Paste supplier reply** on `/app/quotes`
+- [ ] Submit repository URL
+- [ ] Confirm `npm run build` and `npm run test:api` pass locally
+- [ ] Do not commit `.env.local` or API keys
+
 ## Judge run (under 5 minutes)
 
 ```bash
@@ -22,7 +40,7 @@ Open **http://localhost:3847** and follow the demo script below. No API key requ
 |------|--------|------------|
 | 0:00 | `/` | Hook — procurement on autopilot, 3 Cairo cafés |
 | 0:30 | `/app/request` | Click **Run demo script** (or Send the pre-filled Layla message → **Confirm & send RFQ**) |
-| 1:30 | `/app/quotes` | Comparison table + recommendation from your session (not static orphan data) |
+| 1:30 | `/app/quotes` | Comparison table + **Paste supplier reply** (or use auto-parsed mock replies) |
 | 2:00 | `/app/request` | **Approve recommendation** |
 | 2:30 | `/app/inventory` | Branch rows + audit log updated (persisted in **localStorage**) |
 | 3:00 | `/app/dashboard` | Active request status + stock alerts reflect the same session |
@@ -123,7 +141,7 @@ npm run test:api
 # or: MR_BILL_BASE_URL=http://127.0.0.1:3847 bash scripts/test-api.sh
 ```
 
-Checks HTTP status for all app routes, `GET /api/agent/config`, agent error cases (400), intake message, and `confirmAction: send_rfq`. When OpenRouter returns an auth error, intake falls back to the demo agent (`llmFallback: true`) so the API still returns 200 — fix `OPENROUTER_API_KEY` in `.env.local` for true live LLM replies.
+Checks HTTP status for all app routes, `GET /api/agent/config`, agent error cases (400), intake message, and `confirmAction: send_rfq`. When OpenRouter returns an auth error, the API retries DeepSeek when `DEEPSEEK_API_KEY` is set; if both fail, intake falls back to the demo agent (`llmFallback: true`) so the API still returns 200.
 
 ## Hackathon submission checklist
 
@@ -149,4 +167,4 @@ If push fails, confirm GitHub auth (SSH key or `gh auth login`) and that the rem
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).

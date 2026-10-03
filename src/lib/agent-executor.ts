@@ -96,6 +96,7 @@ export function executeAgentTool(
         neededBy,
       });
       next.rfqId = output.rfqId;
+      next.rfqMessages = output.messages;
       next.status = "rfq_sent";
 
       const autoParsed: ToolCallResult[] = [];

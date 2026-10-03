@@ -51,11 +51,7 @@ export function hasLiveLlmConfig(): boolean {
   return resolveLlmProvider() !== null;
 }
 
-export function createLlmClient(): OpenAI {
-  const provider = resolveLlmProvider();
-  if (!provider) {
-    throw new Error("No LLM provider configured");
-  }
+export function createLlmClientForProvider(provider: LlmProvider): OpenAI {
   const apiKey = getLlmApiKey(provider);
   if (!apiKey) {
     throw new Error(`Missing API key for provider: ${provider}`);
@@ -89,6 +85,78 @@ export function createLlmClient(): OpenAI {
   }
 
   return new OpenAI({ apiKey });
+}
+
+export function createLlmClient(): OpenAI {
+  const provider = resolveLlmProvider();
+  if (!provider) {
+    throw new Error("No LLM provider configured");
+  }
+  return createLlmClientForProvider(provider);
+}
+
+function isRetryableLlmError(err: unknown): boolean {
+  if (!(err instanceof Error)) return true;
+  const msg = err.message.toLowerCase();
+  return (
+    msg.includes("401") ||
+    msg.includes("403") ||
+    msg.includes("429") ||
+    msg.includes("unauthorized") ||
+    msg.includes("invalid") ||
+    msg.includes("api key") ||
+    msg.includes("fetch") ||
+    msg.includes("network") ||
+    msg.includes("timeout")
+  );
+}
+
+export type ChatCompletionParams = Omit<
+  OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
+  "model"
+> & { model?: string };
+
+export async function chatCompletionWithResilience(
+  params: ChatCompletionParams,
+): Promise<{
+  completion: OpenAI.Chat.ChatCompletion;
+  provider: LlmProvider;
+  retriedFrom?: LlmProvider;
+}> {
+  const primary = resolveLlmProvider();
+  if (!primary) {
+    throw new Error("No LLM provider configured");
+  }
+
+  const primaryModel = getLlmModel(primary);
+  const primaryClient = createLlmClientForProvider(primary);
+
+  try {
+    const completion = await primaryClient.chat.completions.create({
+      ...params,
+      model: params.model ?? primaryModel,
+    });
+    return { completion, provider: primary };
+  } catch (primaryErr) {
+    const deepseekKey = process.env.DEEPSEEK_API_KEY?.trim();
+    if (
+      primary === "openrouter" &&
+      deepseekKey &&
+      isRetryableLlmError(primaryErr)
+    ) {
+      console.warn(
+        "OpenRouter chat failed; retrying with DeepSeek:",
+        primaryErr instanceof Error ? primaryErr.message : primaryErr,
+      );
+      const fallbackClient = createLlmClientForProvider("deepseek");
+      const completion = await fallbackClient.chat.completions.create({
+        ...params,
+        model: getLlmModel("deepseek"),
+      });
+      return { completion, provider: "deepseek", retriedFrom: "openrouter" };
+    }
+    throw primaryErr;
+  }
 }
 
 export function getLlmPublicConfig(): {
