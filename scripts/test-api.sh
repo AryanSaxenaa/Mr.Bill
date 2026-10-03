@@ -54,8 +54,10 @@ if ! curl -s -o /dev/null --connect-timeout 2 "$BASE/"; then
 fi
 
 expect_status "GET /" GET "/" "200"
-expect_status "GET /app/dashboard" GET "/app/dashboard" "200"
-expect_status "GET /app/request" GET "/app/request" "200"
+expect_status "GET /app/orders" GET "/app/orders" "200"
+expect_status "GET /app/orders/new" GET "/app/orders/new" "200"
+expect_status "GET /app/dashboard" GET "/app/dashboard" "307"
+expect_status "GET /app/request" GET "/app/request" "307"
 expect_status "GET /app/quotes" GET "/app/quotes" "200"
 expect_status "GET /app/inventory" GET "/app/inventory" "200"
 

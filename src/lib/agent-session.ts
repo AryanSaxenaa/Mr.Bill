@@ -21,7 +21,7 @@ export interface AgentSession {
 }
 
 export const DEFAULT_SESSION: AgentSession = {
-  requestId: "REQ-MAISON-018",
+  requestId: "ORD-2026-0142",
   lineItems: [],
   neededBy: "Friday",
   deliveryBranch: "Maadi",

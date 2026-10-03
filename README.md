@@ -44,11 +44,11 @@ Open **http://localhost:3847** and follow the demo script below. No API key requ
 | Time | Route | What to do |
 |------|--------|------------|
 | 0:00 | `/` | Hook — procurement on autopilot, 3 Cairo cafés |
-| 0:30 | `/app/request` | Click **Run demo script** (or Send the pre-filled Layla message → **Confirm & send RFQ**) |
-| 1:30 | `/app/quotes` | Comparison table + **Paste supplier reply** (or use auto-parsed mock replies) |
-| 2:00 | `/app/request` | **Approve recommendation** |
+| 0:30 | `/app/orders/new` | Fill line items (or **Parse into line items** in Ask Mr.Bill) → **Send RFQs** |
+| 1:30 | `/app/quotes` | Quote desk comparison + **Paste supplier reply** |
+| 2:00 | `/app/orders/ORD-2026-0142` | Review recommendation → **Approve & update inventory** |
 | 2:30 | `/app/inventory` | Branch rows + audit log updated (persisted in **localStorage**) |
-| 3:00 | `/app/dashboard` | Active request status + stock alerts reflect the same session |
+| 3:00 | `/app/orders` | Pipeline status + open orders list |
 
 ## Environment variables
 

@@ -5,11 +5,12 @@ import { CompareTable } from "@/components/compare-table";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_QUOTES, supplierName } from "@/lib/mock-data";
+import { MOCK_QUOTES, supplierName, ACTIVE_ORDER_ID } from "@/lib/mock-data";
 import { recommend } from "@/lib/agent-tools";
 import { useAppState } from "@/lib/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasteQuoteReply } from "@/components/paste-quote-reply";
+import { Check } from "lucide-react";
 
 export default function QuotesPage() {
   const { requestStatus, agentSession } = useAppState();
@@ -31,16 +32,19 @@ export default function QuotesPage() {
         })
       : null);
 
-  const rfqLabel = agentSession.rfqId ?? "Run a request to generate RFQ";
+  const rfqLabel = agentSession.rfqId ?? "No RFQ — start from New order";
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
+          <p className="text-sm font-medium text-sage">Quote desk</p>
           <h1 className="font-display text-3xl font-semibold text-espresso">
-            Quotes
+            Supplier comparison
           </h1>
-          <p className="mt-1 font-mono text-sm text-cocoa">{rfqLabel}</p>
+          <p className="mt-1 font-mono text-sm text-cocoa">
+            {agentSession.requestId || ACTIVE_ORDER_ID} · {rfqLabel}
+          </p>
         </div>
         {hasComparison && (
           <div className="flex flex-wrap gap-2">
@@ -53,7 +57,7 @@ export default function QuotesPage() {
                   variant="outline"
                   className="border-sage/40 bg-sage/10 text-sage"
                 >
-                  {supplierName(q.supplierId)} · Parsed
+                  {supplierName(q.supplierId)} · In
                 </Badge>
               );
             })}
@@ -65,35 +69,50 @@ export default function QuotesPage() {
 
       {!quotesReady && (
         <Card className="border-oat bg-linen">
-          <CardContent className="py-8 text-center text-cocoa">
-            Run the{" "}
-            <Link href="/app/request" className="text-terracotta underline">
-              New request
-            </Link>{" "}
-            flow to send RFQs and parse supplier replies first.
+          <CardContent className="py-10 text-center text-cocoa">
+            <p className="font-display text-lg text-espresso">No quotes yet</p>
+            <p className="mt-2 text-sm">
+              Create an order, send RFQs, then paste supplier replies or run the
+              demo pipeline.
+            </p>
+            <Link
+              href="/app/orders/new"
+              className={cn(
+                buttonVariants(),
+                "mt-4 inline-flex bg-espresso text-linen",
+              )}
+            >
+              New order
+            </Link>
           </CardContent>
         </Card>
       )}
 
       {quotesReady && !hasComparison && (
         <Card className="border-oat bg-linen">
-          <CardContent className="py-8 text-center text-cocoa">
-            Confirm and send RFQ in{" "}
-            <Link href="/app/request" className="text-terracotta underline">
-              New request
+          <CardContent className="py-10 text-center text-cocoa">
+            Send RFQs from{" "}
+            <Link href="/app/orders/new" className="text-terracotta underline">
+              New order
             </Link>{" "}
-            to populate this comparison from your session.
+            or paste replies below to populate the comparison matrix.
           </CardContent>
         </Card>
       )}
 
-      {hasComparison && <CompareTable highlightBest />}
+      {hasComparison && (
+        <CompareTable
+          highlightBest
+          showLandedTotals
+          showSupplierRoles
+        />
+      )}
 
       {rec && hasComparison && (
         <Card className="card-shadow border-oat bg-linen">
           <CardHeader>
             <CardTitle className="font-display text-lg text-espresso">
-              Recommendation
+              Split recommendation
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -108,13 +127,14 @@ export default function QuotesPage() {
             </ul>
             {requestStatus !== "approved" && (
               <Link
-                href="/app/request?step=approve"
+                href={`/app/orders/${agentSession.requestId || ACTIVE_ORDER_ID}`}
                 className={cn(
                   buttonVariants(),
                   "bg-terracotta text-linen hover:bg-terracotta/90",
                 )}
               >
-                Approve in chat
+                <Check className="mr-2 size-4" />
+                Approve on order detail
               </Link>
             )}
           </CardContent>

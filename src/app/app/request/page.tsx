@@ -1,14 +1,5 @@
-import { Suspense } from "react";
-import { RequestChat } from "./request-chat";
+import { redirect } from "next/navigation";
 
-export default function RequestPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="text-cocoa">Loading request workspace…</div>
-      }
-    >
-      <RequestChat />
-    </Suspense>
-  );
+export default function RequestRedirectPage() {
+  redirect("/app/orders/new");
 }

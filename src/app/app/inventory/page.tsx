@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -28,7 +29,7 @@ export default function InventoryPage() {
           Inventory
         </h1>
         <p className="mt-1 text-cocoa">
-          Branch-level stock after approved orders
+          Branch stock ledger — updates after order approval
         </p>
       </div>
 
@@ -84,8 +85,11 @@ export default function InventoryPage() {
         <CardContent>
           {audit.length <= 1 ? (
             <p className="py-4 text-center text-sm text-cocoa">
-              No order approvals yet. Approve a recommendation on New request to
-              see inventory deltas here.
+              No order approvals yet. Approve a recommendation on an{" "}
+              <Link href="/app/orders" className="text-terracotta underline">
+                order
+              </Link>{" "}
+              to see inventory deltas here.
             </p>
           ) : (
             <ul className="space-y-3 text-sm">

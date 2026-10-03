@@ -1,0 +1,110 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { Loader2, Sparkles } from "lucide-react";
+
+interface AskMrBillPanelProps {
+  draft: string;
+  onDraftChange: (v: string) => void;
+  onParse: () => void;
+  loading: boolean;
+  lastAssistantNote?: string | null;
+  agentMode: "demo" | "live" | null;
+  llmNotice: string | null;
+  apiError: string | null;
+}
+
+export function AskMrBillPanel({
+  draft,
+  onDraftChange,
+  onParse,
+  loading,
+  lastAssistantNote,
+  agentMode,
+  llmNotice,
+  apiError,
+}: AskMrBillPanelProps) {
+  return (
+    <aside className="flex flex-col rounded-xl border border-oat bg-linen card-shadow lg:max-w-sm">
+      <div className="border-b border-oat px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 text-sage" strokeWidth={1.75} />
+          <h2 className="font-display text-base font-semibold text-espresso">
+            Ask Mr.Bill
+          </h2>
+        </div>
+        <p className="mt-1 text-xs text-cocoa">
+          Natural language fill — parses into the line table. Use action buttons
+          on the form to RFQ and compare.
+        </p>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        {agentMode === "demo" && (
+          <p className="rounded-md border border-sage/30 bg-sage/10 px-2 py-1.5 text-xs text-espresso">
+            Demo mode — same tool path as judges; add OpenRouter for live LLM.
+          </p>
+        )}
+
+        {llmNotice && (
+          <p
+            className={cn(
+              "rounded-md border px-2 py-1.5 text-xs",
+              llmNotice.startsWith("deepseek-retry:")
+                ? "border-sage/30 bg-sage/10"
+                : "border-terracotta/30 bg-terracotta/10",
+            )}
+            role="status"
+          >
+            {llmNotice.startsWith("deepseek-retry:")
+              ? "Retried with DeepSeek after OpenRouter failure."
+              : `LLM unavailable — demo agent used.`}
+          </p>
+        )}
+
+        {apiError && (
+          <p
+            className="rounded-md border border-terracotta/40 bg-terracotta/10 px-2 py-1.5 text-xs text-espresso"
+            role="alert"
+          >
+            {apiError}
+          </p>
+        )}
+
+        <Textarea
+          value={draft}
+          onChange={(e) => onDraftChange(e.target.value)}
+          className="min-h-[120px] border-oat bg-cream text-sm"
+          placeholder="e.g. Maadi low on oat milk and cups before Friday; Zamalek needs 2kg espresso."
+          disabled={loading}
+        />
+
+        <Button
+          type="button"
+          variant="outline"
+          className="border-oat bg-cream hover:bg-oat/40"
+          onClick={onParse}
+          disabled={loading || !draft.trim()}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Sparkles className="mr-2 size-4" />
+          )}
+          Parse into line items
+        </Button>
+
+        {lastAssistantNote && (
+          <div className="rounded-lg border border-oat bg-cream p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-cocoa">
+              Agent note
+            </p>
+            <p className="mt-1 text-sm text-espresso">{lastAssistantNote}</p>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}

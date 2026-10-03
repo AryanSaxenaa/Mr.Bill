@@ -346,3 +346,14 @@ export function updateInventory(
 }
 
 export const ACTIVE_REQUEST_ID = DEMO_REQUEST_ID;
+
+export function landedLineTotal(
+  supplierId: string,
+  sku: string,
+  qty: number,
+): number {
+  const quote = MOCK_QUOTES.find((q) => q.supplierId === supplierId);
+  const line = quote?.lines.find((l) => l.sku === sku);
+  if (!line) return 0;
+  return line.unitPrice * qty;
+}

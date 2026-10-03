@@ -30,9 +30,29 @@ export interface InventoryRow {
   parLevel: number;
 }
 
+export type OrderStage =
+  | "draft"
+  | "rfq_sent"
+  | "quotes_in"
+  | "recommended"
+  | "approved";
+
+export interface OrderRecord {
+  id: string;
+  title: string;
+  branchId: BranchId;
+  neededBy: string;
+  createdAt: string;
+  stage: OrderStage;
+  lineItemCount: number;
+  primarySupplierId?: string;
+  fallbackSupplierId?: string;
+  rfqId?: string;
+}
+
 export interface RequestRecord {
   id: string;
-  status: "draft" | "rfq_sent" | "quotes_ready" | "approved";
+  status: OrderStage;
   lineItems: LineItem[];
   neededBy: string;
   createdAt: string;
@@ -163,7 +183,65 @@ export interface Quote {
 }
 
 export const MOCK_RFQ_ID = "RFQ-2026-0042";
-export const DEMO_REQUEST_ID = "REQ-MAISON-018";
+export const DEMO_REQUEST_ID = "ORD-2026-0142";
+export const ACTIVE_ORDER_ID = DEMO_REQUEST_ID;
+
+export const DEMO_ORDERS: OrderRecord[] = [
+  {
+    id: "ORD-2026-0138",
+    title: "Weekly dairy & cups — Maadi",
+    branchId: "maadi",
+    neededBy: "2026-09-28",
+    createdAt: "2026-09-24T10:00:00Z",
+    stage: "approved",
+    lineItemCount: 2,
+    primarySupplierId: "cairo-dairy",
+    fallbackSupplierId: "bean-barrel",
+    rfqId: "RFQ-2026-0039",
+  },
+  {
+    id: "ORD-2026-0140",
+    title: "Espresso restock — Zamalek",
+    branchId: "zamalek",
+    neededBy: "2026-10-01",
+    createdAt: "2026-09-29T14:30:00Z",
+    stage: "approved",
+    lineItemCount: 1,
+    primarySupplierId: "bean-barrel",
+    rfqId: "RFQ-2026-0040",
+  },
+  {
+    id: "ORD-2026-0141",
+    title: "Disposables top-up — New Cairo",
+    branchId: "new-cairo",
+    neededBy: "2026-10-05",
+    createdAt: "2026-10-01T09:15:00Z",
+    stage: "quotes_in",
+    lineItemCount: 2,
+    primarySupplierId: "nile-disposables",
+    rfqId: "RFQ-2026-0041",
+  },
+];
+
+export const ORDER_STAGE_LABELS: Record<OrderStage, string> = {
+  draft: "Draft",
+  rfq_sent: "RFQ sent",
+  quotes_in: "Quotes in",
+  recommended: "Recommended",
+  approved: "Approved",
+};
+
+export const PIPELINE_STAGES: OrderStage[] = [
+  "draft",
+  "rfq_sent",
+  "quotes_in",
+  "recommended",
+  "approved",
+];
+
+export function stageIndex(stage: OrderStage): number {
+  return PIPELINE_STAGES.indexOf(stage);
+}
 
 export const MOCK_QUOTES: Quote[] = [
   {

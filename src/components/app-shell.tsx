@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  MessageSquarePlus,
+  ClipboardList,
   Table2,
   Package,
   Coffee,
+  PlusCircle,
 } from "lucide-react";
 import { BRANCHES, type BranchId } from "@/lib/mock-data";
 import { useAppState } from "@/lib/app-state";
@@ -22,15 +22,26 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app/request", label: "New request", icon: MessageSquarePlus },
-  { href: "/app/quotes", label: "Quotes", icon: Table2 },
+  { href: "/app/orders", label: "Orders", icon: ClipboardList },
+  { href: "/app/orders/new", label: "New order", icon: PlusCircle },
+  { href: "/app/quotes", label: "Quote desk", icon: Table2 },
   { href: "/app/inventory", label: "Inventory", icon: Package },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { branchFilter, setBranchFilter, resetDemoData } = useAppState();
+
+  const isActive = (href: string) => {
+    if (href === "/app/orders") {
+      return (
+        pathname === "/app/orders" ||
+        (pathname.startsWith("/app/orders/") &&
+          !pathname.startsWith("/app/orders/new"))
+      );
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <div className="flex min-h-screen bg-cream">
@@ -41,12 +52,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <p className="font-display text-lg font-semibold text-espresso">
               Mr.Bill
             </p>
-            <p className="text-xs text-cocoa">Maison Layla</p>
+            <p className="text-xs text-cocoa">Order desk · Maison Layla</p>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
           {NAV.map((item) => {
-            const active = pathname === item.href;
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
@@ -75,7 +86,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <p className="text-sm text-cocoa">
-            Procurement on autopilot for your cafés
+            Procurement on autopilot — RFQ, compare, approve
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button
