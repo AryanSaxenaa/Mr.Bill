@@ -63,6 +63,79 @@ function defaultSupplierIds(session: AgentSession): string[] {
   return ["cairo-dairy", "bean-barrel"];
 }
 
+async function runSendRfqConfirm(
+  sessionIn: AgentSession,
+  inventory: { branchId: string; sku: string; qty: number }[],
+): Promise<{
+  session: AgentSession;
+  toolTrace: { name: string; summary: string }[];
+  assistantMessage: string;
+}> {
+  const toolTrace: { name: string; summary: string }[] = [];
+  let session: AgentSession = {
+    ...sessionIn,
+    lineItems:
+      sessionIn.lineItems.length > 0 ? sessionIn.lineItems : PARSED_LINE_ITEMS,
+  };
+
+  const { session: s1, result } = await executeAgentTool(
+    "send_rfq",
+    {
+      request_id: session.requestId,
+      supplier_ids: defaultSupplierIds(session),
+      line_items: session.lineItems,
+      delivery_branch: session.deliveryBranch,
+      needed_by: session.neededBy,
+    },
+    session,
+    inventory,
+  );
+  session = s1;
+  toolTrace.push({ name: result.name, summary: result.summary });
+
+  if (session.quoteIds.length >= 2) {
+    const { session: s2, result: cmp } = await executeAgentTool(
+      "compare_quotes",
+      {
+        request_id: session.requestId,
+        quote_ids: session.quoteIds,
+      },
+      session,
+      inventory,
+    );
+    session = s2;
+    toolTrace.push({ name: cmp.name, summary: cmp.summary });
+
+    const { session: s3, result: rec } = await executeAgentTool(
+      "recommend",
+      {
+        request_id: session.requestId,
+        comparison_id: session.comparisonId,
+      },
+      session,
+      inventory,
+    );
+    session = s3;
+    toolTrace.push({ name: rec.name, summary: rec.summary });
+
+    return {
+      session,
+      toolTrace,
+      assistantMessage: `${rec.summary}\n\nSide-by-side comparison is ready below.`,
+    };
+  }
+
+  const waiting = hasAgentMailConfig()
+    ? "RFQs sent from your quote inbox. Catalog quotes are attached so you can compare now."
+    : "Waiting for supplier quotes.";
+
+  return {
+    session,
+    toolTrace,
+    assistantMessage: `${result.summary}\n\n${waiting}`,
+  };
+}
+
 function isConfirmMessage(message: string): boolean {
   const t = message.toLowerCase().trim();
   return (
@@ -89,66 +162,78 @@ export async function POST(req: Request) {
   }
 
   if (body.parseQuote?.rawText?.trim()) {
-    let session: AgentSession = body.session ?? { ...DEFAULT_SESSION };
-    const inventory = body.inventory ?? [];
-    const toolTrace: { name: string; summary: string }[] = [];
-    const supplierId = body.parseQuote.supplierId || "cairo-dairy";
-    const rawText = body.parseQuote.rawText.trim();
+    try {
+      let session: AgentSession = body.session ?? { ...DEFAULT_SESSION };
+      const inventory = body.inventory ?? [];
+      const toolTrace: { name: string; summary: string }[] = [];
+      const supplierId = body.parseQuote.supplierId || "cairo-dairy";
+      const rawText = body.parseQuote.rawText.trim();
 
-    const { session: s1, result: parsed } = await executeAgentTool(
-      "parse_quote_reply",
-      {
-        rfq_id: session.rfqId,
-        supplier_id: supplierId,
-        raw_text: rawText,
-      },
-      session,
-      inventory,
-    );
-    session = s1;
-    toolTrace.push({ name: parsed.name, summary: parsed.summary });
-
-    if (session.quoteIds.length >= 2) {
-      const { session: s2, result: cmp } = await executeAgentTool(
-        "compare_quotes",
+      const { session: s1, result: parsed } = await executeAgentTool(
+        "parse_quote_reply",
         {
-          request_id: session.requestId,
-          quote_ids: session.quoteIds,
+          rfq_id: session.rfqId,
+          supplier_id: supplierId,
+          raw_text: rawText,
         },
         session,
         inventory,
       );
-      session = s2;
-      toolTrace.push({ name: cmp.name, summary: cmp.summary });
+      session = s1;
+      toolTrace.push({ name: parsed.name, summary: parsed.summary });
 
-      const { session: s3, result: rec } = await executeAgentTool(
-        "recommend",
-        {
-          request_id: session.requestId,
-          comparison_id: session.comparisonId,
-        },
-        session,
-        inventory,
-      );
-      session = s3;
-      toolTrace.push({ name: rec.name, summary: rec.summary });
+      if (session.quoteIds.length >= 2) {
+        const { session: s2, result: cmp } = await executeAgentTool(
+          "compare_quotes",
+          {
+            request_id: session.requestId,
+            quote_ids: session.quoteIds,
+          },
+          session,
+          inventory,
+        );
+        session = s2;
+        toolTrace.push({ name: cmp.name, summary: cmp.summary });
+
+        const { session: s3, result: rec } = await executeAgentTool(
+          "recommend",
+          {
+            request_id: session.requestId,
+            comparison_id: session.comparisonId,
+          },
+          session,
+          inventory,
+        );
+        session = s3;
+        toolTrace.push({ name: rec.name, summary: rec.summary });
+
+        return NextResponse.json({
+          assistantMessage: `Parsed reply from ${supplierId}. ${rec.summary}`,
+          session,
+          toolTrace,
+          ui: uiHintsFromSession(session),
+          mode: hasLiveLlmConfig() ? "live" : "demo",
+        });
+      }
 
       return NextResponse.json({
-        assistantMessage: `Parsed reply from ${supplierId}. ${rec.summary}`,
+        assistantMessage: parsed.summary,
         session,
         toolTrace,
         ui: uiHintsFromSession(session),
         mode: hasLiveLlmConfig() ? "live" : "demo",
       });
+    } catch (err) {
+      console.error("parseQuote failed:", err);
+      return NextResponse.json({
+        assistantMessage:
+          "Could not parse that reply. Try the Cairo Dairy or Bean & Barrel sample text.",
+        session: body.session ?? { ...DEFAULT_SESSION },
+        toolTrace: [],
+        ui: uiHintsFromSession(body.session ?? { ...DEFAULT_SESSION }),
+        mode: hasLiveLlmConfig() ? "live" : "demo",
+      });
     }
-
-    return NextResponse.json({
-      assistantMessage: parsed.summary,
-      session,
-      toolTrace,
-      ui: uiHintsFromSession(session),
-      mode: hasLiveLlmConfig() ? "live" : "demo",
-    });
   }
 
   if (!hasLiveLlmConfig()) {
@@ -168,72 +253,71 @@ export async function POST(req: Request) {
   let inventoryDeltas: InventoryDelta[] | undefined;
 
   if (body.confirmAction === "send_rfq") {
-    session = {
-      ...session,
-      lineItems:
-        session.lineItems.length > 0 ? session.lineItems : PARSED_LINE_ITEMS,
-    };
-    const { session: s1, result } = await executeAgentTool(
-      "send_rfq",
-      {
-        request_id: session.requestId,
-        supplier_ids: defaultSupplierIds(session),
-        line_items: session.lineItems,
-        delivery_branch: session.deliveryBranch,
-        needed_by: session.neededBy,
-      },
-      session,
-      inventory,
-    );
-    session = s1;
-    toolTrace.push({ name: result.name, summary: result.summary });
-
-    if (session.quoteIds.length >= 2) {
-      const { session: s2, result: cmp } = await executeAgentTool(
-        "compare_quotes",
-        {
-          request_id: session.requestId,
-          quote_ids: session.quoteIds,
-        },
-        session,
+    try {
+      const pipeline = await runSendRfqConfirm(
+        body.session ?? { ...DEFAULT_SESSION },
         inventory,
       );
-      session = s2;
-      toolTrace.push({ name: cmp.name, summary: cmp.summary });
-
-      const { session: s3, result: rec } = await executeAgentTool(
-        "recommend",
-        {
-          request_id: session.requestId,
-          comparison_id: session.comparisonId,
-        },
-        session,
-        inventory,
-      );
-      session = s3;
-      toolTrace.push({ name: rec.name, summary: rec.summary });
-
       return NextResponse.json({
-        assistantMessage: `${rec.summary}\n\nSide-by-side comparison is ready below.`,
-        session,
-        toolTrace,
-        ui: uiHintsFromSession(session),
-        mode: "live",
+        assistantMessage: pipeline.assistantMessage,
+        session: pipeline.session,
+        toolTrace: pipeline.toolTrace,
+        ui: uiHintsFromSession(pipeline.session),
+        mode: hasLiveLlmConfig() ? "live" : "demo",
       });
+    } catch (err) {
+      console.error("confirmAction send_rfq failed:", err);
+      try {
+        const demo = await runDemoAgent({
+          message: message ?? "",
+          history: body.history,
+          session: body.session,
+          inventory: body.inventory,
+          confirmAction: "send_rfq",
+        });
+        return NextResponse.json({
+          ...demo,
+          mailFallback: true,
+          mailFallbackReason:
+            err instanceof Error ? err.message : "RFQ send failed",
+        });
+      } catch (demoErr) {
+        console.error("send_rfq demo fallback failed:", demoErr);
+        const fallbackSession: AgentSession = {
+          ...(body.session ?? { ...DEFAULT_SESSION }),
+          lineItems:
+            body.session && body.session.lineItems.length > 0
+              ? body.session.lineItems
+              : PARSED_LINE_ITEMS,
+        };
+        try {
+          const recovered = await runSendRfqConfirm(fallbackSession, inventory);
+          return NextResponse.json({
+            assistantMessage: recovered.assistantMessage,
+            session: recovered.session,
+            toolTrace: recovered.toolTrace,
+            ui: uiHintsFromSession(recovered.session),
+            mode: "demo",
+            mailFallback: true,
+            mailFallbackReason:
+              err instanceof Error ? err.message : "RFQ send failed",
+          });
+        } catch (lastErr) {
+          console.error("send_rfq last-resort failed:", lastErr);
+          return NextResponse.json({
+            assistantMessage:
+              "RFQ send hit an error. Simulated Cairo Dairy and Bean & Barrel quotes are ready so you can compare.",
+            session: fallbackSession,
+            toolTrace: [],
+            ui: uiHintsFromSession(fallbackSession),
+            mode: "demo",
+            mailFallback: true,
+            mailFallbackReason:
+              err instanceof Error ? err.message : "RFQ send failed",
+          });
+        }
+      }
     }
-
-    const waiting =
-      hasAgentMailConfig()
-        ? "RFQs sent from your quote inbox. Use Sync supplier replies on the order when suppliers respond."
-        : "Waiting for supplier quotes.";
-
-    return NextResponse.json({
-      assistantMessage: `${result.summary}\n\n${waiting}`,
-      session,
-      toolTrace,
-      ui: uiHintsFromSession(session),
-      mode: "live",
-    });
   }
 
   if (body.confirmAction === "approve") {
@@ -379,25 +463,37 @@ export async function POST(req: Request) {
           continue;
         }
 
-        const { session: newSession, result } = await executeAgentTool(
-          name,
-          parsedArgs,
-          session,
-          inventory,
-        );
-        session = newSession;
-        toolTrace.push({ name: result.name, summary: result.summary });
+        try {
+          const { session: newSession, result } = await executeAgentTool(
+            name,
+            parsedArgs,
+            session,
+            inventory,
+          );
+          session = newSession;
+          toolTrace.push({ name: result.name, summary: result.summary });
 
-        if (name === "update_inventory") {
-          const out = result.output as { inventoryDeltas: InventoryDelta[] };
-          inventoryDeltas = out.inventoryDeltas;
+          if (name === "update_inventory") {
+            const out = result.output as { inventoryDeltas: InventoryDelta[] };
+            inventoryDeltas = out.inventoryDeltas;
+          }
+
+          messages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify(result.output),
+          });
+        } catch (toolErr) {
+          console.error("Agent tool failed:", name, toolErr);
+          messages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify({
+              error:
+                toolErr instanceof Error ? toolErr.message : "Tool failed",
+            }),
+          });
         }
-
-        messages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: JSON.stringify(result.output),
-        });
       }
 
       if (toolCalls.length > 0 && !assistantText) {
@@ -421,46 +517,23 @@ export async function POST(req: Request) {
       session.status === "awaiting_confirm" &&
       isConfirmMessage(message ?? "")
     ) {
-      const { session: s1, result } = await executeAgentTool(
-        "send_rfq",
-        {
-          request_id: session.requestId,
-          supplier_ids: defaultSupplierIds(session),
-          line_items: session.lineItems,
-          delivery_branch: session.deliveryBranch,
-          needed_by: session.neededBy,
-        },
-        session,
-        inventory,
-      );
-      session = s1;
-      toolTrace.push({ name: result.name, summary: result.summary });
-
-      if (session.quoteIds.length >= 2) {
-        const { session: s2, result: cmp } = await executeAgentTool(
-          "compare_quotes",
-          { request_id: session.requestId, quote_ids: session.quoteIds },
+      try {
+        const pipeline = await runSendRfqConfirm(session, inventory);
+        session = pipeline.session;
+        toolTrace.push(...pipeline.toolTrace);
+        assistantText = `${assistantText}\n\n${pipeline.assistantMessage}`.trim();
+      } catch (err) {
+        console.error("LLM-path send_rfq failed:", err);
+        const demo = await runDemoAgent({
+          message: message ?? "",
+          history: body.history,
           session,
           inventory,
-        );
-        session = s2;
-        toolTrace.push({ name: cmp.name, summary: cmp.summary });
-
-        const { session: s3, result: rec } = await executeAgentTool(
-          "recommend",
-          {
-            request_id: session.requestId,
-            comparison_id: session.comparisonId,
-          },
-          session,
-          inventory,
-        );
-        session = s3;
-        toolTrace.push({ name: rec.name, summary: rec.summary });
-        assistantText = `${assistantText}\n\n${rec.summary}`.trim();
-      } else if (hasAgentMailConfig()) {
-        assistantText =
-          `${assistantText}\n\nRFQs sent from your quote inbox - sync supplier replies on the order desk.`.trim();
+          confirmAction: "send_rfq",
+        });
+        session = demo.session;
+        toolTrace.push(...demo.toolTrace);
+        assistantText = `${assistantText}\n\n${demo.assistantMessage}`.trim();
       }
     }
 

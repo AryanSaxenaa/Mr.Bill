@@ -88,7 +88,7 @@ export async function syncSupplierReplies(
       ? inboundOnly
       : merged.filter((m) => !m.from.includes(inboxId));
 
-  const fallbackRfqId = next.rfqId ?? "RFQ-2026-0042";
+  const fallbackRfqId = next.rfqId ?? next.requestId;
 
   for (const message of toProcess) {
     const parsedResult = parseInboundForRfq(message, fallbackRfqId);

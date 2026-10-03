@@ -58,25 +58,15 @@ export default function OrderDetailPage() {
 
   const isActive = orderId === (agentSession.requestId || ACTIVE_ORDER_ID);
   const staticOrder = DEMO_ORDERS.find((o) => o.id === orderId);
+  const unknownOrder = !isActive && !staticOrder;
 
   const stage = isActive
     ? sessionToOrderStage(requestStatus, agentSession)
-    : (staticOrder?.stage ?? "approved");
+    : (staticOrder?.stage ?? "draft");
 
-  const lineItems = isActive
-    ? agentSession.lineItems
-    : staticOrder
-      ? []
-      : [];
+  const lineItems = isActive ? agentSession.lineItems : [];
 
-  const displayLines =
-    lineItems.length > 0
-      ? lineItems
-      : isActive
-        ? []
-        : [
-            { sku: "OAT-1L", name: "Oat milk 1L", qty: 48, unit: "carton", branchId: "maadi" as const },
-          ];
+  const displayLines = lineItems;
 
   const inventorySnapshot = useMemo(
     () =>
@@ -178,6 +168,27 @@ export default function OrderDetailPage() {
     isActive &&
     Boolean(agentSession.recommendation) &&
     requestStatus !== "approved";
+
+  if (unknownOrder) {
+    return (
+      <div className="mx-auto max-w-lg space-y-4 py-12 text-center">
+        <p className="font-mono text-sm text-cocoa">{orderId}</p>
+        <h1 className="font-display text-3xl font-semibold text-espresso">
+          Order not found
+        </h1>
+        <p className="text-cocoa">
+          That id is not on the Maison Layla desk. Open Orders and pick a live
+          or historical card.
+        </p>
+        <Link
+          href="/app/orders"
+          className={cn(buttonVariants(), "inline-flex")}
+        >
+          Back to orders
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">

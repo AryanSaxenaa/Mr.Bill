@@ -26,7 +26,7 @@ Same five steps as the landing page - one order ID from intake to approval:
 
 **Integrations (server-side, with demo fallbacks):**
 
-- **[OpenRouter](https://openrouter.ai)** / **[DeepSeek](https://api.deepseek.com)** / OpenAI - optional live agent on `/app/request` (`src/lib/llm-client.ts`)
+- **[OpenRouter](https://openrouter.ai)** / **[DeepSeek](https://api.deepseek.com)** / OpenAI - optional live agent on `/app/orders/new` (`src/lib/llm-client.ts`)
 - **[SerpAPI](https://serpapi.com)** - Google wholesale discovery (`find_suppliers`, `POST /api/suppliers/search`)
 - **[AgentMail](https://agentmail.to)** - real RFQ email + inbound webhook (`send_rfq`, `POST /api/webhooks/agentmail`)
 
@@ -94,8 +94,10 @@ Copy [`.env.example`](./.env.example) to `.env.local` - **never commit** secrets
 | `AGENTMAIL_API_KEY` | No | Real RFQ delivery; without it, simulated send + instant mock replies |
 | `AGENTMAIL_INBOX_ID` | No | Reuse inbox; else created with `clientId` `mrbill-procurement-v1` |
 | `MRBILL_RFQ_TO_EMAIL` | No | Hackathon-safe: all RFQs to one inbox; subject `[Supplier: …]` keeps context |
+| `MRBILL_INBOX_SECRET` | No | Shared secret for `GET /api/agentmail/inbox` and the webhook. Send header `x-mrbill-inbox-key`. Without it, both routes return 401. |
+| `AGENTMAIL_WEBHOOK_SECRET` | No | Alternate value accepted for the same header. |
 
-**Inbound webhook (production):** `https://mrbill-production.up.railway.app/api/webhooks/agentmail` (`message.received`). On order detail, use **Sync supplier replies** after mail arrives.
+Inbound webhook (production): `https://mrbill-production.up.railway.app/api/webhooks/agentmail` (`message.received`). Unsigned posts return 401. On order detail, use **Sync supplier replies** after mail arrives. Configure `x-mrbill-inbox-key` as a custom delivery header on the quote-inbox webhook.
 
 Rotate any key that was pasted in chat or committed.
 
@@ -107,7 +109,7 @@ Rotate any key that was pasted in chat or committed.
 Browser (Layla)
     │
     ▼
-Next.js App Router - landing + /app/* (dashboard, request, quotes, orders, inventory)
+Next.js App Router - landing + /app/* (orders, new order, quotes, inventory)
     │  shared session: localStorage via src/lib/app-state.tsx
     ▼
 API routes
@@ -115,8 +117,9 @@ API routes
     GET  /api/agent/config       - liveAgent, integration flags
     POST /api/suppliers/search   - SerpAPI (key server-only)
     POST /api/agentmail/sync     - pull inbound replies
-    POST /api/webhooks/agentmail - AgentMail events
+    POST /api/webhooks/agentmail - inbound events (header required)
     GET  /api/health
+    GET  /api/agentmail/inbox     - requires x-mrbill-inbox-key
     ▼
 src/lib/agent-executor.ts → agent-tools.ts
     find_suppliers · send_rfq · parse_quote_reply · compare_quotes · recommend · update_inventory
@@ -146,15 +149,15 @@ Full checklist: **[docs/SUBMISSION.md](./docs/SUBMISSION.md)** · Slide copy: **
 | Time | Route | Action |
 |------|--------|--------|
 | 0:00 | `/` | Landing - five-step story, Maison Layla |
-| 0:30 | `/app/request` | **Run demo script** → confirm line items → **Confirm & send RFQ** |
+| 0:30 | `/app/orders/new` | **Run demo script** → confirm line items → **Send RFQs** |
 | 1:30 | `/app/quotes` | Comparison matrix · **Paste supplier reply** (optional) |
-| 2:00 | `/app/request` or order detail | **Approve recommendation** |
+| 2:00 | `/app/orders/ORD-2026-0142` | **Approve & update inventory** |
 | 2:30 | `/app/inventory` | Branch stock + audit (localStorage) |
-| 3:00 | `/app/dashboard` | Request status + alerts |
+| 3:00 | `/app/orders` | Pipeline status + below-par SKUs |
 
-**Reset between takes:** **Reset demo data** in the app header.
+**Reset between takes:** **Reset demo data** in the app header (toast confirms).
 
-No API key required for the judge path. `npm run build` and `npm run test:api` pass in CI without keys.
+No API key required for the judge path. Live quote-inbox failure still attaches Cairo Dairy / Bean & Barrel quotes so compare works. `npm run build` and `npm run test:api` pass in CI without keys.
 
 ---
 

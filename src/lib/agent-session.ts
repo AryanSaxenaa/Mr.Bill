@@ -19,6 +19,7 @@ export interface AgentSession {
     inboxId: string;
     from: string;
     mode: "agentmail" | "simulated";
+    error?: string;
   }[];
   quoteIds: string[];
   comparisonId?: string;

@@ -11,14 +11,16 @@ import {
   type UpdateInventoryOutput,
 } from "./agent-tools";
 import {
+  CATALOG_RFQ_SUPPLIER_IDS,
   DEMO_REQUEST_ID,
+  generateRfqId,
   MOCK_QUOTE_REPLIES,
   MOCK_QUOTES,
   type LineItem,
 } from "./mock-data";
 import type { AgentSession } from "./agent-session";
 import { hasAgentMailConfig } from "./agentmail";
-import { deliverRfqEmail } from "./rfq-email";
+import { deliverRfqEmail, type RfqEmailDelivery } from "./rfq-email";
 
 export type ToolName =
   | "find_suppliers"
@@ -33,6 +35,46 @@ export interface ToolCallResult {
   input: Record<string, unknown>;
   output: unknown;
   summary: string;
+}
+
+function attachCatalogMockQuotes(
+  next: AgentSession,
+  rfqId: string,
+  supplierIds: string[],
+): ToolCallResult[] {
+  const autoParsed: ToolCallResult[] = [];
+  const parseIds = new Set<string>([
+    ...supplierIds.filter((id) => Boolean(MOCK_QUOTE_REPLIES[id])),
+    ...CATALOG_RFQ_SUPPLIER_IDS,
+  ]);
+
+  for (const supplierId of parseIds) {
+    const raw = MOCK_QUOTE_REPLIES[supplierId];
+    if (!raw) continue;
+    try {
+      const parsed = parseQuoteReply({
+        rfqId,
+        supplierId,
+        rawText: raw,
+      });
+      if (!next.quoteIds.includes(parsed.quoteId)) {
+        next.quoteIds.push(parsed.quoteId);
+      }
+      autoParsed.push({
+        name: "parse_quote_reply",
+        input: { supplier_id: supplierId, auto: true },
+        output: parsed,
+        summary: `Attached catalog quote from ${supplierId} → ${parsed.quoteId}`,
+      });
+    } catch (err) {
+      console.error("Catalog quote attach failed:", err);
+    }
+  }
+
+  if (next.quoteIds.length >= 2) {
+    next.status = "quotes_ready";
+  }
+  return autoParsed;
 }
 
 function parseLineItems(raw: unknown): LineItem[] {
@@ -125,7 +167,7 @@ export async function executeAgentTool(
         ? args.supplier_ids.filter((x): x is string => typeof x === "string")
         : next.selectedRfqSupplierIds.length > 0
           ? next.selectedRfqSupplierIds
-          : ["cairo-dairy", "bean-barrel"];
+          : [...CATALOG_RFQ_SUPPLIER_IDS];
       const lineItems =
         parseLineItems(args.line_items).length > 0
           ? parseLineItems(args.line_items)
@@ -154,15 +196,29 @@ export async function executeAgentTool(
       });
 
       const agentMailEnabled = hasAgentMailConfig();
-      const emailDeliveries = [];
+      const emailDeliveries: RfqEmailDelivery[] = [];
       for (const msg of output.messages) {
-        const delivery = await deliverRfqEmail({
-          supplierId: msg.supplierId,
-          rfqId: output.rfqId,
-          requestId,
-          text: msg.body,
-        });
-        emailDeliveries.push(delivery);
+        try {
+          const delivery = await deliverRfqEmail({
+            supplierId: msg.supplierId,
+            rfqId: output.rfqId,
+            requestId,
+            text: msg.body,
+          });
+          emailDeliveries.push(delivery);
+        } catch (err) {
+          console.error("RFQ delivery threw:", err);
+          emailDeliveries.push({
+            supplierId: msg.supplierId,
+            to: "simulated",
+            subject: `RFQ ${output.rfqId}`,
+            messageId: `sim-${output.rfqId}-${msg.supplierId}`,
+            inboxId: "simulated",
+            from: "procurement@mrbill.local",
+            mode: "simulated" as const,
+            error: err instanceof Error ? err.message : "send failed",
+          });
+        }
       }
 
       output.emailDeliveries = emailDeliveries;
@@ -174,43 +230,27 @@ export async function executeAgentTool(
       next.selectedRfqSupplierIds = supplierIds;
       next.status = "rfq_sent";
 
-      const autoParsed: ToolCallResult[] = [];
-      if (!agentMailEnabled) {
-        for (const supplierId of supplierIds) {
-          if (!MOCK_QUOTE_REPLIES[supplierId]) {
-            continue;
-          }
-          const raw =
-            MOCK_QUOTE_REPLIES[supplierId] ??
-            `Mock quote from ${supplierId} (auto-generated for demo).`;
-          const parsed = parseQuoteReply({
-            rfqId: output.rfqId,
-            supplierId,
-            rawText: raw,
-          });
-          if (!next.quoteIds.includes(parsed.quoteId)) {
-            next.quoteIds.push(parsed.quoteId);
-          }
-          autoParsed.push({
-            name: "parse_quote_reply",
-            input: { supplier_id: supplierId, auto: true },
-            output: parsed,
-            summary: `Auto-parsed mock reply from ${supplierId} → ${parsed.quoteId}`,
-          });
-        }
-        next.status = "quotes_ready";
-      }
+      const autoParsed = attachCatalogMockQuotes(
+        next,
+        output.rfqId,
+        supplierIds,
+      );
 
-      const deliveryNote = agentMailEnabled
-        ? `Quote inbox sent to ${emailDeliveries.map((d) => d.to).join(", ")}. Sync supplier replies when quotes arrive.`
-        : `Mock supplier replies parsed.`;
+      const mailFallback =
+        agentMailEnabled &&
+        emailDeliveries.some((d) => d.mode === "simulated");
+      const deliveryNote = mailFallback
+        ? "Quote inbox send did not complete; simulated Cairo Dairy and Bean & Barrel quotes are attached so you can compare."
+        : agentMailEnabled
+          ? "Quote inbox send recorded. Catalog quotes are attached so you can compare without waiting on replies."
+          : "Simulated send with Cairo Dairy and Bean & Barrel quotes attached.";
 
       return {
         session: next,
         result: {
           name,
           input: args,
-          output: { ...output, autoParsed },
+          output: { ...output, autoParsed, mailFallback },
           summary: `RFQ ${output.rfqId} sent to ${supplierIds.join(", ")}. ${deliveryNote}`,
         },
       };
@@ -220,7 +260,10 @@ export async function executeAgentTool(
       const rfqId =
         typeof args.rfq_id === "string"
           ? args.rfq_id
-          : (next.rfqId ?? "RFQ-2026-0042");
+          : (next.rfqId ?? generateRfqId());
+      if (!next.rfqId) {
+        next.rfqId = rfqId;
+      }
       const supplierId =
         typeof args.supplier_id === "string" ? args.supplier_id : "cairo-dairy";
       let rawText =

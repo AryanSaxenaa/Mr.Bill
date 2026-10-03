@@ -20,6 +20,17 @@ export interface SupplierSearchResult {
 const SERPAPI_ENDPOINT = "https://serpapi.com/search.json";
 const MAX_RESULTS = 8;
 
+const DIRECTORY_JUNK =
+  /kompass|search companies|company directory|yellow.?pages|europages|industrystock|zoominfo|dnb\.com|thomasnet|alibaba\.com\/showroom/i;
+
+function isDirectoryJunk(row: {
+  name: string;
+  url: string;
+  snippet: string;
+}): boolean {
+  return DIRECTORY_JUNK.test(`${row.name} ${row.url} ${row.snippet}`);
+}
+
 export function getSerpApiKey(): string | undefined {
   return process.env.SERPAPI_API_KEY?.trim() || undefined;
 }
@@ -59,7 +70,7 @@ function mockCatalogResults(query: string): SupplierSearchResult {
     query,
     poweredBySerpApi: false,
     message:
-      "SERPAPI_API_KEY is not set. Showing Maison Layla catalog suppliers for demo RFQ selection.",
+      "Live search key is not set. Showing Maison Layla catalog suppliers for demo RFQ selection.",
     results: SUPPLIERS.map((s) => ({
       id: s.id,
       name: s.name,
@@ -99,6 +110,7 @@ function parseSerpPayload(
     phone?: string;
   }) => {
     if (!row.name || out.length >= MAX_RESULTS) return;
+    if (isDirectoryJunk(row)) return;
     const key = `${row.name}|${row.url}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -178,19 +190,21 @@ export async function searchSuppliers(options: {
       console.error("SerpAPI HTTP error:", response.status, text.slice(0, 200));
       return {
         ...mockCatalogResults(query),
-        message: `SerpAPI request failed (HTTP ${response.status}). Using catalog suppliers.`,
+        message: `Live search request failed (HTTP ${response.status}). Using catalog suppliers.`,
       };
     }
 
     const data = (await response.json()) as Record<string, unknown>;
-    const results = parseSerpPayload(data, query);
+    const results = parseSerpPayload(data, query).filter(
+      (row) => !isDirectoryJunk(row),
+    );
 
     if (results.length === 0) {
       return {
-        query,
+        ...mockCatalogResults(query),
         poweredBySerpApi: true,
-        message: "No SerpAPI results for this query; try broader keywords.",
-        results: [],
+        message:
+          "Live search had no usable wholesalers (directory pages filtered). Using catalog suppliers.",
       };
     }
 
@@ -206,7 +220,7 @@ export async function searchSuppliers(options: {
     );
     return {
       ...mockCatalogResults(query),
-      message: "SerpAPI unreachable. Using catalog suppliers.",
+      message: "Live search unreachable. Using catalog suppliers.",
     };
   }
 }

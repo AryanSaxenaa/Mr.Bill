@@ -83,11 +83,11 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 | Placeholder | Caption |
 |-------------|---------|
 | Landing - five-step animation | Hook - F&B procurement desk |
-| `/app/request` - demo script | Intake → confirm → RFQ |
+| `/app/orders/new` - **Run demo script** | Intake → confirm → RFQ |
 | `/app/quotes` - matrix | EGP compare + paste reply |
 | `/app/inventory` | Approved order → branch ledger |
 
-**URLs:** https://mrbill-production.up.railway.app · local http://localhost:3847 · keyless **Run demo script**
+**URLs:** https://mrbill-production.up.railway.app · local http://localhost:3847 · **Run demo script** on `/app/orders/new` works without an API key
 
 ---
 
@@ -122,7 +122,7 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 ## Speaker notes (2–3 min)
 
 1. Introduce Layla and three-branch pain (30 s).  
-2. **Run demo script** on `/app/request` - confirm, RFQ, compare (60 s).  
+2. **Run demo script** on `/app/orders/new` - confirm, RFQ, compare (60 s).  
 3. **Quotes** - same session (30 s).  
-4. Approve → **Inventory** + **Dashboard** (45 s).  
+4. Approve on `/app/orders/ORD-2026-0142` → **Inventory** + **Orders** pipeline (45 s).  
 5. Close: scope honesty (no payments/freight); live integrations optional; MIT repo (15 s).

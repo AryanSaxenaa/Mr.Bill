@@ -5,6 +5,10 @@ import {
   mergeWebhookAndListed,
   type StoredInboundMessage,
 } from "@/lib/agentmail-inbound";
+import {
+  authorizeInboxRequest,
+  unauthorizedInboxResponse,
+} from "@/lib/inbox-auth";
 
 function mapRemote(
   msg: {
@@ -48,7 +52,11 @@ function mapRemote(
   };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!authorizeInboxRequest(req)) {
+    return unauthorizedInboxResponse();
+  }
+
   if (!hasAgentMailConfig()) {
     return NextResponse.json({
       agentMailEnabled: false,

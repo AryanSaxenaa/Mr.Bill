@@ -145,6 +145,27 @@ export function NewOrderWorkspace() {
     [setAgentSession, setRequestStatus, applyInventoryDeltas],
   );
 
+  const handleRunDemoScript = () => {
+    setNlDraft(DEMO_INTAKE_TEXT);
+    setNeededBy("Friday");
+    setBranchId("maadi");
+    setLines(PARSED_LINE_ITEMS);
+    setSelectedSupplierIds(["cairo-dairy", "bean-barrel"]);
+    setDiscovered([]);
+    setAgentSession({
+      ...DEFAULT_SESSION,
+      lineItems: PARSED_LINE_ITEMS,
+      status: "awaiting_confirm",
+      neededBy: "Friday",
+      deliveryBranch: "Maadi",
+      selectedRfqSupplierIds: ["cairo-dairy", "bean-barrel"],
+    });
+    setRequestStatus("confirmed");
+    setAssistantNote(
+      "Friday restock is in the line table: oat milk and cups for Maadi, espresso for Zamalek. Review the rows, then Send RFQs when you are ready.",
+    );
+  };
+
   const handleParse = async () => {
     const data = await callAgent({
       message: nlDraft.trim(),
@@ -469,6 +490,7 @@ export function NewOrderWorkspace() {
           draft={nlDraft}
           onDraftChange={setNlDraft}
           onParse={() => void handleParse()}
+          onRunDemoScript={handleRunDemoScript}
           loading={loading}
           lastAssistantNote={assistantNote}
           agentMode={agentMode}

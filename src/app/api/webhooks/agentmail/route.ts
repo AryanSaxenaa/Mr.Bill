@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { storeInboundFromWebhook } from "@/lib/agentmail-inbound";
+import {
+  authorizeInboxRequest,
+  unauthorizedInboxResponse,
+} from "@/lib/inbox-auth";
 
 export async function POST(req: Request) {
+  if (!authorizeInboxRequest(req)) {
+    return unauthorizedInboxResponse();
+  }
+
   let payload: unknown;
   try {
     payload = await req.json();

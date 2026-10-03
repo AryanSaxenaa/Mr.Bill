@@ -70,15 +70,15 @@ npm run build
 | Time | Route | Action |
 |------|--------|--------|
 | 0:00 | `/` | Landing - five-step procurement story, three Cairo cafés |
-| 0:30 | `/app/request` | **Run demo script** → **Confirm & send RFQ** |
+| 0:30 | `/app/orders/new` | **Run demo script** → **Send RFQs** |
 | 1:30 | `/app/quotes` | Comparison table · **Paste supplier reply** (optional) |
-| 2:00 | `/app/request` or `/app/orders/ORD-2026-0142` | **Approve recommendation** |
+| 2:00 | `/app/orders/ORD-2026-0142` | **Approve & update inventory** |
 | 2:30 | `/app/inventory` | Branch stock + audit log (localStorage) |
-| 3:00 | `/app/dashboard` | Request status + stock alerts |
+| 3:00 | `/app/orders` | Pipeline status + stock alerts |
 
 **Reset between takes:** **Reset demo data** in the app header.
 
-`GET /api/agent/config` - `liveAgent: false` = keyless demo; with keys, live chat uses the same six tools with demo fallback on failure.
+`GET /api/agent/config` - `liveAgent: false` = keyless demo; with keys, live chat uses the same six tools with demo fallback on failure. Inbox dump routes are locked without `x-mrbill-inbox-key`.
 
 ---
 
@@ -87,7 +87,7 @@ npm run build
 ### SerpAPI (discover vendors)
 
 1. Set `SERPAPI_API_KEY` in `.env.local` or Railway.
-2. On intake or **New request**, agent/UI can search live wholesalers near Cairo; without a key, catalog suppliers are used.
+2. On intake or **New order**, agent/UI can search live wholesalers near Cairo; without a key, catalog suppliers are used.
 
 ### AgentMail (RFQ email)
 
@@ -95,7 +95,7 @@ npm run build
 2. Optional `MRBILL_RFQ_TO_EMAIL=you@example.com` for judge-safe inbox routing.
 3. RFQ panel shows send status with message id when live.
 4. Reply by email or paste on `/app/quotes` → **Sync supplier replies** on order detail.
-5. Production webhook: `https://mrbill-production.up.railway.app/api/webhooks/agentmail` (`message.received`).
+5. Production webhook: `https://mrbill-production.up.railway.app/api/webhooks/agentmail` (`message.received`). Requires header `x-mrbill-inbox-key` (see `.env.example`). Unsigned posts return 401.
 
 Rotate AgentMail or SerpAPI keys if they were exposed.
 

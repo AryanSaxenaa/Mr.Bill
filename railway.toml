@@ -1,4 +1,4 @@
-# Railway deploy — Nixpacks detects Node.js; build/start match package.json scripts.
+# Railway deploy: Nixpacks detects Node.js; build/start match package.json scripts.
 # Docs: https://docs.railway.com/reference/config-as-code
 
 [build]

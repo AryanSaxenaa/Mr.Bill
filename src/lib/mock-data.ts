@@ -190,6 +190,15 @@ export interface Quote {
 export const MOCK_RFQ_ID = "RFQ-2026-0042";
 export const DEMO_REQUEST_ID = "ORD-2026-0142";
 export const ACTIVE_ORDER_ID = DEMO_REQUEST_ID;
+export const CATALOG_RFQ_SUPPLIER_IDS = ["cairo-dairy", "bean-barrel"] as const;
+
+export function generateRfqId(): string {
+  const rand =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()
+      : Math.random().toString(36).slice(2, 10).toUpperCase();
+  return `RFQ-${Date.now()}-${rand}`;
+}
 
 export const DEMO_ORDERS: OrderRecord[] = [
   {

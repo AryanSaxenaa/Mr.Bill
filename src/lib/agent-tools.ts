@@ -1,7 +1,8 @@
 import {
+  CATALOG_RFQ_SUPPLIER_IDS,
   DEMO_REQUEST_ID,
+  generateRfqId,
   MOCK_QUOTES,
-  MOCK_RFQ_ID,
   type LineItem,
   type Quote,
   supplierName,
@@ -156,12 +157,17 @@ export { buildSupplierSearchQuery };
 
 export function sendRfq(input: SendRfqInput): SendRfqOutput {
   const sentAt = new Date().toISOString();
+  const rfqId = generateRfqId();
   const linesText = input.lineItems
     .map((l) => `• ${l.name} × ${l.qty} ${l.unit} (${l.branchId})`)
     .join("\n");
   const discovered = input.discoveredSuppliers ?? [];
+  const supplierIds =
+    input.supplierIds.length > 0
+      ? input.supplierIds
+      : [...CATALOG_RFQ_SUPPLIER_IDS];
 
-  const messages = input.supplierIds.map((supplierId) => {
+  const messages = supplierIds.map((supplierId) => {
     const name = resolveSupplierDisplayName(supplierId, discovered);
     const ext = discovered.find((d) => d.id === supplierId);
     const contactLine = ext?.url
@@ -169,12 +175,12 @@ export function sendRfq(input: SendRfqInput): SendRfqOutput {
       : "";
     return {
       supplierId,
-      body: `Hi ${name},\n\nRFQ ${MOCK_RFQ_ID} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n${contactLine ? `\n${contactLine}\n` : ""}\n- Mr.Bill (on behalf of Layla)`,
+      body: `Hi ${name},\n\nRFQ ${rfqId} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n${contactLine ? `\n${contactLine}\n` : ""}\n- Mr.Bill (on behalf of Layla)`,
     };
   });
 
   return {
-    rfqId: MOCK_RFQ_ID,
+    rfqId,
     messages,
     sentAt,
   };
@@ -183,9 +189,12 @@ export function sendRfq(input: SendRfqInput): SendRfqOutput {
 export function parseQuoteReply(
   input: ParseQuoteReplyInput,
 ): ParseQuoteReplyOutput {
-  const quote = findQuote(input.supplierId);
+  const quote =
+    findQuote(input.supplierId) ??
+    findQuote("cairo-dairy") ??
+    MOCK_QUOTES[0];
   if (!quote) {
-    throw new Error(`No mock quote for supplier ${input.supplierId}`);
+    throw new Error("No catalog quote available for this supplier");
   }
 
   return {

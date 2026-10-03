@@ -18,6 +18,8 @@ export interface AgentApiSuccess {
   llmFallbackReason?: string;
   llmRetriedFrom?: string;
   llmProvider?: string;
+  mailFallback?: boolean;
+  mailFallbackReason?: string;
 }
 
 interface InventorySnapshotRow {
@@ -55,7 +57,18 @@ export function useAgentApi() {
           }),
         });
 
-        const data = (await res.json()) as AgentApiSuccess;
+        const text = await res.text();
+        let data: AgentApiSuccess;
+        try {
+          data = JSON.parse(text) as AgentApiSuccess;
+        } catch {
+          setApiError(
+            res.status >= 500
+              ? "The order desk hit a server error. Try Send RFQs again; simulated quotes still work if mail is down."
+              : `Agent error (${res.status}).`,
+          );
+          return null;
+        }
 
         if (!res.ok) {
           setApiError(data.error ?? `Agent error (${res.status})`);
@@ -66,7 +79,11 @@ export function useAgentApi() {
           setAgentMode(data.mode);
         }
 
-        if (data.llmFallback) {
+        if (data.mailFallback) {
+          setLlmNotice(
+            `mail-fallback:${data.mailFallbackReason ?? "quote inbox unavailable"}`,
+          );
+        } else if (data.llmFallback) {
           setLlmNotice(
             `demo-fallback:${data.llmFallbackReason ?? "LLM unavailable"}`,
           );
@@ -81,7 +98,9 @@ export function useAgentApi() {
 
         return data;
       } catch {
-        setApiError("Could not reach the agent API. Is the dev server running?");
+        setApiError(
+          "Could not reach the order desk. Check your connection and try again.",
+        );
         return null;
       } finally {
         setLoading(false);

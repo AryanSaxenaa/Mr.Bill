@@ -38,8 +38,6 @@ export function PasteQuoteReply() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const canParse = Boolean(agentSession.rfqId) || agentSession.quoteIds.length > 0;
-
   const handleParse = async () => {
     if (!rawText.trim() || loading) return;
     setLoading(true);
@@ -86,19 +84,11 @@ export function PasteQuoteReply() {
           Paste supplier reply
         </CardTitle>
         <p className="text-sm text-cocoa">
-          Drop an email or WhatsApp quote - Mr.Bill runs{" "}
-          <span className="font-mono text-xs">parse_quote_reply</span> and
-          refreshes comparison when both quotes are in.
+          Drop an email or WhatsApp quote. Mr.Bill parses it and refreshes
+          comparison when both quotes are in.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!canParse && (
-          <p className="rounded-lg border border-stripe-border bg-cream px-3 py-2 text-sm text-cocoa">
-            Send an RFQ from{" "}
-            <span className="font-medium text-espresso">New request</span> first
-            so replies link to your RFQ id.
-          </p>
-        )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select
             value={supplierId}
@@ -122,7 +112,7 @@ export function PasteQuoteReply() {
           <Button
             type="button"
             className="bg-primary text-primary-foreground"
-            disabled={loading || !rawText.trim() || !canParse}
+            disabled={loading || !rawText.trim()}
             onClick={() => void handleParse()}
           >
             {loading ? (

@@ -3,12 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Loader2, Sparkles } from "lucide-react";
+import { formatAgentNote } from "@/lib/format-agent-note";
+import { Loader2, PlayCircle, Sparkles } from "lucide-react";
 
 interface AskMrBillPanelProps {
   draft: string;
   onDraftChange: (v: string) => void;
   onParse: () => void;
+  onRunDemoScript: () => void;
   loading: boolean;
   lastAssistantNote?: string | null;
   agentMode: "demo" | "live" | null;
@@ -20,12 +22,17 @@ export function AskMrBillPanel({
   draft,
   onDraftChange,
   onParse,
+  onRunDemoScript,
   loading,
   lastAssistantNote,
   agentMode,
   llmNotice,
   apiError,
 }: AskMrBillPanelProps) {
+  const formattedNote = lastAssistantNote
+    ? formatAgentNote(lastAssistantNote)
+    : null;
+
   return (
     <aside className="flex flex-col rounded-xl border border-stripe-border bg-linen card-shadow lg:max-w-sm">
       <div className="border-b border-stripe-border px-4 py-3">
@@ -60,7 +67,9 @@ export function AskMrBillPanel({
           >
             {llmNotice.startsWith("deepseek-retry:")
               ? "Retried with backup model after the primary AI was unavailable."
-              : `AI order desk unavailable - demo path used.`}
+              : llmNotice.startsWith("mail-fallback:")
+                ? "Quote inbox send did not complete. Simulated Cairo Dairy and Bean & Barrel quotes are attached so you can compare."
+                : "AI order desk unavailable - demo path used."}
           </p>
         )}
 
@@ -83,6 +92,20 @@ export function AskMrBillPanel({
 
         <Button
           type="button"
+          className="bg-primary text-primary-foreground"
+          onClick={onRunDemoScript}
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <PlayCircle className="mr-2 size-4" />
+          )}
+          Run demo script
+        </Button>
+
+        <Button
+          type="button"
           variant="outline"
           className="border-stripe-border bg-cream hover:bg-oat/40"
           onClick={onParse}
@@ -96,12 +119,14 @@ export function AskMrBillPanel({
           Parse into line items
         </Button>
 
-        {lastAssistantNote && (
+        {formattedNote && (
           <div className="rounded-lg border border-stripe-border bg-cream p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-cocoa">
               Agent note
             </p>
-            <p className="mt-1 text-sm text-espresso">{lastAssistantNote}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-espresso">
+              {formattedNote}
+            </p>
           </div>
         )}
       </div>

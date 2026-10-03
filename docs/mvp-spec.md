@@ -56,8 +56,8 @@ Implementation: `src/lib/agent-tools.ts`, `src/lib/agent-executor.ts`, `POST /ap
 | Time | Scene | What judges see |
 |------|--------|-----------------|
 | 0:00 | **Hook** | Landing - five animated steps, Maison Layla |
-| 0:30 | **Intake** | `/app/request` - **Run demo script** → confirm Maadi/Zamalek line items |
-| 1:00 | **RFQ** | Confirm send - simulated or AgentMail status on order |
+| 0:30 | **Intake** | `/app/orders/new` - **Run demo script** → confirm Maadi/Zamalek line items |
+| 1:00 | **RFQ** | Confirm send - live quote inbox or simulated send; catalog quotes attach either way |
 | 1:30 | **Compare** | `/app/quotes` - EGP matrix, MOQ flags, paste reply optional |
 | 2:00 | **Recommend** | Approve split recommendation in chat or order view |
 | 2:30 | **Inventory** | `/app/inventory` - branch rows + audit |

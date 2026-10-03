@@ -71,8 +71,8 @@ else
 fi
 
 expect_status "GET /api/agent/config" GET "/api/agent/config" "200"
-expect_status "GET /api/agentmail/inbox" GET "/api/agentmail/inbox" "200"
-expect_status "POST /api/webhooks/agentmail" POST "/api/webhooks/agentmail" "200" '{"event_type":"message.received","message":{"message_id":"smoke-test-msg","inbox_id":"smoke-inbox","subject":"[Supplier: Cairo Dairy Co.] RFQ RFQ-2026-0042","text":"Oat milk 1L: EGP 42.50/carton"}}'
+expect_status "GET /api/agentmail/inbox unauthorized" GET "/api/agentmail/inbox" "401"
+expect_status "POST /api/webhooks/agentmail unsigned" POST "/api/webhooks/agentmail" "401" '{"event_type":"message.received","message":{"message_id":"smoke-test-msg","inbox_id":"smoke-inbox","subject":"[Supplier: Cairo Dairy Co.] RFQ RFQ-SMOKE","text":"Oat milk 1L: EGP 42.50/carton"}}'
 
 expect_status "POST /api/agent missing message" POST "/api/agent" "400" '{}'
 
@@ -98,7 +98,7 @@ code=$(curl -s -o /tmp/mr-bill-intake.json -w "%{http_code}" -X POST "$BASE/api/
 
 if [ "$code" = "200" ] && grep -q 'assistantMessage' /tmp/mr-bill-intake.json; then
   if grep -q '"llmFallback":true' /tmp/mr-bill-intake.json; then
-    pass "POST /api/agent live intake (HTTP 200, demo fallback — check OpenRouter key for true live)"
+    pass "POST /api/agent live intake (HTTP 200, demo fallback - check OpenRouter key for true live)"
   else
     pass "POST /api/agent live intake (HTTP 200, assistant reply)"
   fi
@@ -111,10 +111,10 @@ code=$(curl -s -o /tmp/mr-bill-rfq.json -w "%{http_code}" -X POST "$BASE/api/age
   -H "Content-Type: application/json" \
   -d "$SEND_RFQ_BODY")
 
-if [ "$code" = "200" ] && grep -q 'toolTrace' /tmp/mr-bill-rfq.json && grep -q 'send_rfq' /tmp/mr-bill-rfq.json; then
-  pass "POST /api/agent confirmAction send_rfq (HTTP 200, pipeline)"
+if [ "$code" = "200" ] && grep -q 'toolTrace' /tmp/mr-bill-rfq.json && grep -q 'send_rfq' /tmp/mr-bill-rfq.json && grep -q '"rfqId"' /tmp/mr-bill-rfq.json; then
+  pass "POST /api/agent confirmAction send_rfq (HTTP 200, pipeline + rfqId)"
 else
-  fail "POST /api/agent confirmAction send_rfq (expected HTTP 200 + toolTrace, got $code)"
+  fail "POST /api/agent confirmAction send_rfq (expected HTTP 200 + toolTrace + rfqId, got $code)"
 fi
 
 CONFIG=$(curl -s "$BASE/api/agent/config")
