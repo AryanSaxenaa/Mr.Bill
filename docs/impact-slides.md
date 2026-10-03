@@ -1,8 +1,9 @@
 # Mr.Bill — Untap impact deck copy
 
 **Track:** Agents at Work · Professional  
-**Product:** Open-source procurement agent for F&B SMEs  
-**Repo:** https://github.com/AryanSaxenaa/Mr.Bill
+**Product:** Open-source Waybill-style procurement desk for F&B SMEs  
+**Repo:** https://github.com/AryanSaxenaa/Mr.Bill  
+**Live:** https://mrbill-production.up.railway.app  
 
 Use one slide per section below. Replace screenshot placeholders before final export.
 
@@ -12,9 +13,9 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 
 **Headline:** Mr.Bill — procurement on autopilot for food & beverage SMEs  
 
-**Subhead:** Open-source agent loop: intake → RFQ → compare → decide → update inventory  
+**Subhead:** Order desk loop: chat intake → discover vendors → email RFQs → compare → approve → inventory  
 
-**Footer:** Agents at Work · Maison Layla demo · Cairo, EGP  
+**Footer:** Agents at Work · Maison Layla · Cairo, EGP · MIT open source  
 
 ---
 
@@ -43,23 +44,20 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 | Spreadsheet compare | Often skipped | Price drift |
 | Update stock “when someone remembers” | Delayed | Stockouts |
 
-**Visual:** Simple funnel diagram — messages → inbox chaos → stale spreadsheet  
-
 ---
 
 ## Slide 4 — Mr.Bill solution
 
-**Headline:** One agent loop, five tools, human approval at the decision  
+**Headline:** One desk, six tools, human approval at the decision  
 
-**Flow:**
-1. **Chat intake** — plain-language restock per branch  
-2. **Confirm** structured line items  
-3. **`send_rfq`** — drafts to saved suppliers (demo: simulated send + mock replies)  
-4. **`parse_quote_reply`** · **`compare_quotes`** — EGP unit economics, MOQ flags  
-5. **`recommend`** — split order with rationale  
-6. **Approve** → **`update_inventory`** — branch ledger + audit  
+**Flow (matches landing “How it works”):**
+1. **Chat / intake** — plain-language restock per branch  
+2. **Discover vendors** — live search + trusted catalog  
+3. **Email for quotes** — RFQs on one order ID (AgentMail when configured)  
+4. **Compare & recommend** — EGP landed cost, split plan  
+5. **Approve & sync inventory** — branch ledger + audit  
 
-**Differentiator:** Waybill-style reliability for **procurement records**, not freight or payments.
+**Differentiator:** Waybill-style **procurement records**, not freight or payments — and not “just a chatbot.”
 
 ---
 
@@ -69,27 +67,27 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 
 | Metric | Before | With Mr.Bill (target / demo) |
 |--------|--------|------------------------------|
-| Time chasing + comparing | 6–8 h / week | ~1 h / week (agent drafts + one compare view) |
-| Stockout risk (branch visibility) | Low visibility | Per-branch intake + post-approval inventory |
-| Material savings on compared categories | Rarely compared | **5–15% illustrative** on demo split (e.g. ~EGP 840 vs single supplier in Layla script) |
+| Time chasing + comparing | 6–8 h / week | ~1 h / week (drafts + one compare view) |
+| Stockout risk | Low visibility | Per-branch intake + post-approval inventory |
+| Material savings (compared categories) | Rarely compared | **5–15% illustrative** on demo split |
 | Decision latency | Hours–days | Under **1 minute** on comparison table |
 
-**Note for judges:** Savings figure comes from the demo recommendation engine, not a live pilot — honest scope for hackathon.
+**Note for judges:** Savings from the demo recommendation engine — honest hackathon scope.
 
 ---
 
-## Slide 6 — Product screenshot placeholders
+## Slide 6 — Product screenshots
 
 **Headline:** What judges see in 3 minutes  
 
 | Placeholder | Caption |
 |-------------|---------|
-| `[Screenshot: Landing — Agents at Work / open source]` | Hook — F&B procurement, 3 cafés |
-| `[Screenshot: New request chat — line items confirm]` | Layla intake → structured SKUs |
-| `[Screenshot: Quotes — comparison matrix]` | Side-by-side EGP, MOQ, lead time |
-| `[Screenshot: Inventory — Maadi oat milk updated]` | Approved order → branch ledger |
+| Landing — five-step animation | Hook — F&B procurement desk |
+| `/app/request` — demo script | Intake → confirm → RFQ |
+| `/app/quotes` — matrix | EGP compare + paste reply |
+| `/app/inventory` | Approved order → branch ledger |
 
-**Live URL (local):** http://localhost:3847 · **Run demo script** works without API key  
+**URLs:** https://mrbill-production.up.railway.app · local http://localhost:3847 · keyless **Run demo script**
 
 ---
 
@@ -99,15 +97,15 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 
 **Shipped in repo:**
 - Next.js UI + shared session (localStorage)  
-- Five TypeScript tools + OpenAI loop (optional)  
-- Demo script for keyless judging  
+- Six TypeScript tools + optional OpenRouter/DeepSeek/OpenAI loop  
+- SerpAPI + AgentMail integrations with demo fallbacks  
+- Railway deploy + `npm run test:api`  
 
 **Roadmap (post-hackathon):**
-- WhatsApp / email connector for real RFQ delivery  
-- Convex or similar backend for multi-user auth and persistence  
+- WhatsApp connector · multi-user backend (e.g. Convex)  
 - Quote expiry reminders · CSV export for accounting  
 
-**CTA:** Star & fork — https://github.com/AryanSaxenaa/Mr.Bill  
+**CTA:** https://github.com/AryanSaxenaa/Mr.Bill  
 
 ---
 
@@ -115,16 +113,16 @@ Use one slide per section below. Replace screenshot placeholders before final ex
 
 **Headline:** Less chasing. Fewer stockouts. Better unit economics.  
 
-**Subhead:** Mr.Bill — open-source procurement agents for operators like Layla.  
+**Subhead:** Mr.Bill — open-source procurement desk for operators like Layla.  
 
-**Contact / links:** GitHub repo · Agents at Work submission · `npm install && npm run dev` on port 3847  
+**Links:** GitHub · Agents at Work submission · `npm install && npm run dev` (port 3847)
 
 ---
 
 ## Speaker notes (2–3 min)
 
-1. Introduce Layla and the three-branch pain (30 s).  
-2. Show **Run demo script** on `/app/request` — confirm, RFQ, compare in chat (60 s).  
-3. **Quotes** tab — same session data (30 s).  
+1. Introduce Layla and three-branch pain (30 s).  
+2. **Run demo script** on `/app/request` — confirm, RFQ, compare (60 s).  
+3. **Quotes** — same session (30 s).  
 4. Approve → **Inventory** + **Dashboard** (45 s).  
-5. Close with scope honesty: no payments/freight; open source and roadmap (15 s).  
+5. Close: scope honesty (no payments/freight); live integrations optional; MIT repo (15 s).
