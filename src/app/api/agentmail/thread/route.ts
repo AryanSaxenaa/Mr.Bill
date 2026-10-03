@@ -98,7 +98,12 @@ export async function POST(req: Request) {
       .filter((m): m is StoredInboundMessage => m !== null);
 
     const merged = mergeWebhookAndListed(listed);
-    const inbound = merged.filter((m) => matchesSession(m, rfqId, requestId));
+    const inbound = merged.filter((m) => {
+      const from = m.from.toLowerCase();
+      const self = inboxId.toLowerCase();
+      if (from.includes(self)) return false;
+      return matchesSession(m, rfqId, requestId);
+    });
 
     return NextResponse.json({
       agentMailEnabled: true,
