@@ -179,9 +179,27 @@ export async function POST(req: Request) {
   session = intakeHeuristic(message ?? "", session);
 
   const history = body.history ?? [];
-  const provider = resolveLlmProvider()!;
-  const model = getLlmModel(provider);
-  const openai = createLlmClient();
+  let provider: ReturnType<typeof resolveLlmProvider>;
+  let model: string;
+  let openai: ReturnType<typeof createLlmClient>;
+
+  try {
+    provider = resolveLlmProvider();
+    if (!provider) {
+      throw new Error("No LLM provider configured");
+    }
+    model = getLlmModel(provider);
+    openai = createLlmClient();
+  } catch (err) {
+    console.error("Agent LLM client setup failed:", err);
+    const demo = runDemoAgent({
+      message: message ?? "",
+      history: body.history,
+      session: body.session,
+      inventory: body.inventory,
+    });
+    return NextResponse.json({ ...demo, llmFallback: true });
+  }
 
   const sessionContext = `Current session JSON: ${JSON.stringify({
     requestId: session.requestId,
@@ -212,155 +230,166 @@ export async function POST(req: Request) {
   let assistantText = "";
   let rounds = 0;
 
-  while (rounds < MAX_TOOL_ROUNDS) {
-    rounds += 1;
-    const completion = await openai.chat.completions.create({
-      model,
-      messages,
-      tools: OPENAI_TOOL_DEFINITIONS,
-      tool_choice: "auto",
-    });
+  try {
+    while (rounds < MAX_TOOL_ROUNDS) {
+      rounds += 1;
+      const completion = await openai.chat.completions.create({
+        model,
+        messages,
+        tools: OPENAI_TOOL_DEFINITIONS,
+        tool_choice: "auto",
+      });
 
-    const choice = completion.choices[0]?.message;
-    if (!choice) {
-      break;
-    }
-
-    if (choice.content) {
-      assistantText = choice.content;
-    }
-
-    const toolCalls = choice.tool_calls;
-    if (!toolCalls?.length) {
-      messages.push({ role: "assistant", content: choice.content ?? "" });
-      break;
-    }
-
-    messages.push({
-      role: "assistant",
-      content: choice.content ?? null,
-      tool_calls: toolCalls,
-    });
-
-    for (const call of toolCalls) {
-      if (call.type !== "function") continue;
-      const name = call.function.name as ToolName;
-      let parsedArgs: Record<string, unknown> = {};
-      try {
-        parsedArgs = JSON.parse(call.function.arguments || "{}") as Record<
-          string,
-          unknown
-        >;
-      } catch {
-        parsedArgs = {};
+      const choice = completion.choices[0]?.message;
+      if (!choice) {
+        break;
       }
 
-      if (
-        name === "send_rfq" &&
-        session.status === "awaiting_confirm" &&
-        !isConfirmMessage(message ?? "")
-      ) {
-        const blockResult = {
-          error:
-            "RFQ blocked: waiting for Layla to confirm line items in chat first.",
-        };
-        messages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: JSON.stringify(blockResult),
-        });
-        assistantText =
-          "I have the line items ready — please confirm in the UI or reply “confirm” before I send RFQs to suppliers.";
-        continue;
+      if (choice.content) {
+        assistantText = choice.content;
       }
 
-      const { session: newSession, result } = executeAgentTool(
-        name,
-        parsedArgs,
-        session,
-        inventory,
-      );
-      session = newSession;
-      toolTrace.push({ name: result.name, summary: result.summary });
-
-      if (name === "update_inventory") {
-        const out = result.output as { inventoryDeltas: InventoryDelta[] };
-        inventoryDeltas = out.inventoryDeltas;
+      const toolCalls = choice.tool_calls;
+      if (!toolCalls?.length) {
+        messages.push({ role: "assistant", content: choice.content ?? "" });
+        break;
       }
 
       messages.push({
-        role: "tool",
-        tool_call_id: call.id,
-        content: JSON.stringify(result.output),
+        role: "assistant",
+        content: choice.content ?? null,
+        tool_calls: toolCalls,
       });
+
+      for (const call of toolCalls) {
+        if (call.type !== "function") continue;
+        const name = call.function.name as ToolName;
+        let parsedArgs: Record<string, unknown> = {};
+        try {
+          parsedArgs = JSON.parse(call.function.arguments || "{}") as Record<
+            string,
+            unknown
+          >;
+        } catch {
+          parsedArgs = {};
+        }
+
+        if (
+          name === "send_rfq" &&
+          session.status === "awaiting_confirm" &&
+          !isConfirmMessage(message ?? "")
+        ) {
+          const blockResult = {
+            error:
+              "RFQ blocked: waiting for Layla to confirm line items in chat first.",
+          };
+          messages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify(blockResult),
+          });
+          assistantText =
+            "I have the line items ready — please confirm in the UI or reply “confirm” before I send RFQs to suppliers.";
+          continue;
+        }
+
+        const { session: newSession, result } = executeAgentTool(
+          name,
+          parsedArgs,
+          session,
+          inventory,
+        );
+        session = newSession;
+        toolTrace.push({ name: result.name, summary: result.summary });
+
+        if (name === "update_inventory") {
+          const out = result.output as { inventoryDeltas: InventoryDelta[] };
+          inventoryDeltas = out.inventoryDeltas;
+        }
+
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(result.output),
+        });
+      }
+
+      if (toolCalls.length > 0 && !assistantText) {
+        const followUp = await openai.chat.completions.create({
+          model,
+          messages,
+        });
+        assistantText =
+          followUp.choices[0]?.message?.content ??
+          toolTrace.map((t) => t.summary).join("\n");
+        messages.push({ role: "assistant", content: assistantText });
+        break;
+      }
     }
 
-    if (toolCalls.length > 0 && !assistantText) {
-      const followUp = await openai.chat.completions.create({
-        model,
-        messages,
-      });
-      assistantText =
-        followUp.choices[0]?.message?.content ??
-        toolTrace.map((t) => t.summary).join("\n");
-      messages.push({ role: "assistant", content: assistantText });
-      break;
+    if (
+      session.lineItems.length > 0 &&
+      !session.rfqId &&
+      session.status === "awaiting_confirm" &&
+      isConfirmMessage(message ?? "")
+    ) {
+      const { session: s1, result } = executeAgentTool(
+        "send_rfq",
+        {
+          request_id: session.requestId,
+          supplier_ids: ["cairo-dairy", "bean-barrel"],
+          line_items: session.lineItems,
+          delivery_branch: session.deliveryBranch,
+          needed_by: session.neededBy,
+        },
+        session,
+        inventory,
+      );
+      session = s1;
+      toolTrace.push({ name: result.name, summary: result.summary });
+
+      const { session: s2, result: cmp } = executeAgentTool(
+        "compare_quotes",
+        { request_id: session.requestId, quote_ids: session.quoteIds },
+        session,
+        inventory,
+      );
+      session = s2;
+      toolTrace.push({ name: cmp.name, summary: cmp.summary });
+
+      const { session: s3, result: rec } = executeAgentTool(
+        "recommend",
+        {
+          request_id: session.requestId,
+          comparison_id: session.comparisonId,
+        },
+        session,
+        inventory,
+      );
+      session = s3;
+      toolTrace.push({ name: rec.name, summary: rec.summary });
+      assistantText = `${assistantText}\n\n${rec.summary}`.trim();
     }
+
+    return NextResponse.json({
+      assistantMessage:
+        assistantText ||
+        toolTrace.map((t) => t.summary).join("\n") ||
+        "Done.",
+      session,
+      toolTrace,
+      inventoryDeltas,
+      ui: uiHintsFromSession(session),
+      mode: "live",
+    });
+  } catch (err) {
+    console.error("Agent LLM request failed:", err);
+    const demo = runDemoAgent({
+      message: message ?? "",
+      history: body.history,
+      session: body.session,
+      inventory: body.inventory,
+    });
+    return NextResponse.json({ ...demo, llmFallback: true });
   }
-
-  if (
-    session.lineItems.length > 0 &&
-    !session.rfqId &&
-    session.status === "awaiting_confirm" &&
-    isConfirmMessage(message ?? "")
-  ) {
-    const { session: s1, result } = executeAgentTool(
-      "send_rfq",
-      {
-        request_id: session.requestId,
-        supplier_ids: ["cairo-dairy", "bean-barrel"],
-        line_items: session.lineItems,
-        delivery_branch: session.deliveryBranch,
-        needed_by: session.neededBy,
-      },
-      session,
-      inventory,
-    );
-    session = s1;
-    toolTrace.push({ name: result.name, summary: result.summary });
-
-    const { session: s2, result: cmp } = executeAgentTool(
-      "compare_quotes",
-      { request_id: session.requestId, quote_ids: session.quoteIds },
-      session,
-      inventory,
-    );
-    session = s2;
-    toolTrace.push({ name: cmp.name, summary: cmp.summary });
-
-    const { session: s3, result: rec } = executeAgentTool(
-      "recommend",
-      {
-        request_id: session.requestId,
-        comparison_id: session.comparisonId,
-      },
-      session,
-      inventory,
-    );
-    session = s3;
-    toolTrace.push({ name: rec.name, summary: rec.summary });
-    assistantText = `${assistantText}\n\n${rec.summary}`.trim();
-  }
-
-  return NextResponse.json({
-    assistantMessage:
-      assistantText ||
-      toolTrace.map((t) => t.summary).join("\n") ||
-      "Done.",
-    session,
-    toolTrace,
-    inventoryDeltas,
-    ui: uiHintsFromSession(session),
-    mode: "live",
-  });
 }

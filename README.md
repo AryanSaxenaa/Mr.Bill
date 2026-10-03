@@ -112,6 +112,18 @@ Shared app state lives in `src/lib/app-state.tsx` so **Dashboard**, **Quotes**, 
 | `npm run build` | Production build |
 | `npm run start` | Production server on 3847 |
 | `npm run lint` | ESLint |
+| `npm run test:api` | Smoke-test pages + `/api/agent` (server must be running on 3847) |
+
+### API smoke tests
+
+With `npm run dev` running:
+
+```bash
+npm run test:api
+# or: MR_BILL_BASE_URL=http://127.0.0.1:3847 bash scripts/test-api.sh
+```
+
+Checks HTTP status for all app routes, `GET /api/agent/config`, agent error cases (400), intake message, and `confirmAction: send_rfq`. When OpenRouter returns an auth error, intake falls back to the demo agent (`llmFallback: true`) so the API still returns 200 — fix `OPENROUTER_API_KEY` in `.env.local` for true live LLM replies.
 
 ## Hackathon submission checklist
 
