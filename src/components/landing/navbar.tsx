@@ -2,43 +2,58 @@ import Image from "next/image";
 import Link from "next/link";
 import { GITHUB_URL } from "./constants";
 
+const navLinkClass =
+  "text-sm font-medium text-slate-700 transition hover:text-slate-900";
+
 export function LandingNavbar() {
   return (
-    <header className="fixed top-2 z-30 w-full md:top-6">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative flex h-14 items-center justify-between gap-3 rounded-2xl bg-white/90 px-3 shadow-lg shadow-black/[0.03] backdrop-blur-xs before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--color-gray-100),var(--color-gray-200))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)]">
-          <Link href="/" className="flex flex-1 items-center gap-2">
-            <Image
-              src="/assets/icons/coffee-bean.svg"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7"
-            />
-            <span className="text-lg font-semibold tracking-tight text-gray-900">
-              Mr.Bill
-            </span>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Image
+            src="/assets/icons/coffee-bean.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="size-7"
+          />
+          <span className="text-lg font-semibold tracking-tight text-slate-900">
+            Mr.Bill
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+          <Link href="#product" className={navLinkClass}>
+            Product
           </Link>
-          <ul className="flex flex-1 items-center justify-end gap-3">
-            <li className="hidden sm:block">
-              <Link
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 transition hover:text-gray-900"
-              >
-                GitHub
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/app/orders"
-                className="inline-flex items-center justify-center rounded-lg px-3 py-[5px] text-sm font-medium whitespace-nowrap shadow-sm transition-all bg-gray-800 text-gray-100 hover:bg-gray-900"
-              >
-                Open order desk
-              </Link>
-            </li>
-          </ul>
+          <Link href="#how-it-works" className={navLinkClass}>
+            How it works
+          </Link>
+          <Link
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={navLinkClass}
+          >
+            GitHub
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${navLinkClass} md:hidden`}
+          >
+            GitHub
+          </Link>
+          <Link
+            href="/app/orders"
+            className="inline-flex items-center justify-center rounded-lg bg-[#0A2540] px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#0A2540]/90"
+          >
+            Open order desk
+          </Link>
         </div>
       </div>
     </header>
