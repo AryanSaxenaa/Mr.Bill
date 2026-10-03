@@ -229,6 +229,11 @@ Verify: `curl -s https://YOUR-RAILWAY-URL/api/health` → `{"ok":true,"version":
 
 **Not in this repo:** Payment capture, freight booking, customs, voice at dock, real WhatsApp Business API, production email send (roadmap items).
 
+## Credits
+
+- **Marketing landing** — Adapted from [Cruip Simple Light](https://github.com/cruip/tailwind-landing-page-template) (free Tailwind landing template). Planet, stripes, avatars, and logo orbit assets ship under `public/assets/landing/`.
+- **In-app illustrations** — unDraw (MIT) via `undraw-svg`, listed in project UI direction docs.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
