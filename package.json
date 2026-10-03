@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 3847",
     "build": "next build",
-    "start": "next start -p 3847",
+    "start": "next start -p ${PORT:-3847}",
     "lint": "eslint",
     "test:api": "bash scripts/test-api.sh"
   },

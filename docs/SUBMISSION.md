@@ -25,7 +25,38 @@ cp .env.example .env.local
 # Add one provider key — see README.md
 ```
 
-Never commit `.env.local` or any API keys.
+Never commit `.env.local` or any API keys. Set production secrets only in **Railway Variables** (or your host’s secret store), not in git.
+
+---
+
+## 1b. Push code (your machine)
+
+GitHub authentication happens on **your** laptop or CI — not on the agent VM.
+
+```bash
+git remote set-url origin https://github.com/AryanSaxenaa/Mr.Bill.git
+git push -u origin main
+```
+
+Use SSH or HTTPS with a personal access token / `gh auth login` if push is rejected.
+
+---
+
+## 1c. Deploy on Railway (your machine)
+
+1. **New Project** → **Deploy from GitHub** → **AryanSaxenaa/Mr.Bill** → **main**.
+2. Build/start (also in [`railway.toml`](../railway.toml)): `npm run build` then `npm run start` (Next.js binds to Railway’s **`PORT`**).
+3. Copy the service **public URL**, then add **Variables** from [`.env.example`](../.env.example):
+
+   - `OPENROUTER_API_KEY` — optional for judge/demo hosting; required for live LLM
+   - `LLM_PROVIDER=openrouter` — when using OpenRouter
+   - `OPENROUTER_MODEL=deepseek/deepseek-chat` — or another model id
+   - `NEXT_PUBLIC_APP_URL` — your Railway HTTPS URL
+   - `OPENROUTER_HTTP_REFERER` — same URL (OpenRouter attribution)
+
+4. Redeploy after env changes. Check `GET /api/health` on the public URL.
+
+**Optional:** with Railway CLI installed locally: `railway login` → `railway link` → `railway up`.
 
 ---
 
@@ -105,7 +136,7 @@ Slide text for Untap / pitch deck: **[docs/impact-slides.md](./impact-slides.md)
 - [ ] `npm run test:api` passes (dev server on 3847)
 - [ ] `curl` `/api/health` returns `ok: true` and app version
 - [ ] Demo recorded or rehearsed with **Reset demo data** between runs
-- [ ] No secrets in git (`.env.local` stays local)
+- [ ] No secrets in git (`.env.local` stays local; use Railway Variables in production)
 - [ ] Repository URL and MIT license noted on Untap
 
 ---

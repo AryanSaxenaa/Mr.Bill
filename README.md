@@ -133,7 +133,7 @@ Shared app state lives in `src/lib/app-state.tsx` so **Dashboard**, **Quotes**, 
 |---------|-------------|
 | `npm run dev` | Dev server on port **3847** |
 | `npm run build` | Production build |
-| `npm run start` | Production server on 3847 |
+| `npm run start` | Production server (port **3847** locally; **`PORT`** on Railway) |
 | `npm run lint` | ESLint |
 | `npm run test:api` | Smoke-test pages + `/api/health` + `/api/agent` (server on 3847) |
 
@@ -150,12 +150,45 @@ Checks HTTP status for all app routes, `GET /api/agent/config`, agent error case
 
 ## Push to GitHub
 
+From your machine (GitHub auth is **yours**, not the cloud agent VM):
+
 ```bash
 git remote set-url origin https://github.com/AryanSaxenaa/Mr.Bill.git
 git push -u origin main
 ```
 
-If push fails, confirm GitHub auth (SSH key or `gh auth login`) and that the remote matches your fork.
+If push fails, confirm GitHub auth (SSH key, personal access token, or `gh auth login`) and that the remote matches your fork.
+
+**Secrets:** Never commit `.env.local`. Copy keys only into Railway **Variables** (or local `.env.local` for dev).
+
+## Deploy on Railway
+
+Railway sets **`PORT`** at runtime; `npm run start` runs `next start -p ${PORT:-3847}` so production listens on Railway’s port (3847 when `PORT` is unset locally).
+
+1. Push the repo to GitHub (see above).
+2. In [Railway](https://railway.com) (logged in on **your** machine): **New Project** → **Deploy from GitHub** → select **AryanSaxenaa/Mr.Bill** → branch **main**.
+3. Railway uses Nixpacks (see [`railway.toml`](./railway.toml)): **build** `npm run build`, **start** `npm run start`.
+4. After the first deploy, open the generated **public URL** and set **Variables** (Project → Service → Variables), matching [`.env.example`](./.env.example):
+
+   | Variable | Value |
+   |----------|--------|
+   | `OPENROUTER_API_KEY` | Your OpenRouter key (optional for demo-only hosting) |
+   | `LLM_PROVIDER` | `openrouter` (if using OpenRouter) |
+   | `OPENROUTER_MODEL` | e.g. `deepseek/deepseek-chat` |
+   | `NEXT_PUBLIC_APP_URL` | Your Railway HTTPS URL (e.g. `https://mr-bill-production.up.railway.app`) |
+   | `OPENROUTER_HTTP_REFERER` | Same as `NEXT_PUBLIC_APP_URL` (recommended for OpenRouter) |
+
+   Redeploy after changing variables. Demo mode works without API keys; live chat needs at least one provider key.
+
+5. **Optional CLI** (if [Railway CLI](https://docs.railway.com/guides/cli) is installed locally):
+
+   ```bash
+   railway login
+   railway link    # pick the Mr.Bill service
+   railway up      # deploy from current directory
+   ```
+
+Verify: `curl -s https://YOUR-RAILWAY-URL/api/health` → `{"ok":true,"version":"0.1.0"}`.
 
 ## Scope boundaries (honest)
 
