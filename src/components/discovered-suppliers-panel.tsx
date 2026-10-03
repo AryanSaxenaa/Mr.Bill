@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { DiscoveredSupplier } from "@/lib/serpapi";
 import { SUPPLIERS } from "@/lib/mock-data";
 import type { LineItem } from "@/lib/mock-data";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,7 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ExternalLink, Loader2, Search } from "lucide-react";
 
 export interface DiscoveredSuppliersPanelProps {
   lineItems: LineItem[];
@@ -25,6 +27,86 @@ export interface DiscoveredSuppliersPanelProps {
   poweredBySerpApi?: boolean;
   searchMessage?: string | null;
   disabled?: boolean;
+}
+
+function linkLabel(url: string): string {
+  if (url.startsWith("mailto:")) {
+    return url.replace(/^mailto:/, "");
+  }
+  return url.replace(/^https?:\/\//, "").slice(0, 48);
+}
+
+function SupplierSourceBadge({ source }: { source: DiscoveredSupplier["source"] }) {
+  if (source === "serpapi") {
+    return (
+      <Badge
+        variant="secondary"
+        className="border-indigo-accent/20 bg-indigo-accent/10 text-[10px] uppercase tracking-wide text-indigo-accent"
+      >
+        Web
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="border-stripe-border text-[10px] uppercase tracking-wide text-cocoa"
+    >
+      Catalog
+    </Badge>
+  );
+}
+
+function SupplierRowCard({
+  row,
+  selected,
+  onToggle,
+}: {
+  row: DiscoveredSupplier;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-stripe-border bg-linen p-3 card-shadow transition-colors",
+        selected && "ring-2 ring-indigo-accent/30",
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 shrink-0 accent-espresso"
+          checked={selected}
+          onChange={onToggle}
+          aria-label={`Include ${row.name} in RFQ`}
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-espresso">{row.name}</span>
+            <SupplierSourceBadge source={row.source} />
+          </div>
+          <p className="text-sm leading-snug text-cocoa break-words">{row.snippet}</p>
+          <div className="flex flex-col gap-1 text-sm">
+            {row.url ? (
+              <a
+                href={row.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 font-medium text-indigo-accent underline-offset-2 hover:underline"
+              >
+                <ExternalLink className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{linkLabel(row.url)}</span>
+              </a>
+            ) : null}
+            {row.phone ? (
+              <span className="font-mono text-xs text-cocoa">{row.phone}</span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function DiscoveredSuppliersPanel({
@@ -121,9 +203,9 @@ export function DiscoveredSuppliersPanel({
   const info = localMessage ?? searchMessage;
 
   return (
-    <div className="space-y-3 rounded-xl border border-stripe-border bg-cream/40 p-4">
+    <div className="max-w-full space-y-3 overflow-x-hidden rounded-xl border border-stripe-border bg-cream/40 p-4 card-shadow">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="font-display text-lg font-semibold text-espresso">
             Discovered suppliers
           </h2>
@@ -134,7 +216,7 @@ export function DiscoveredSuppliersPanel({
         <Button
           type="button"
           variant="outline"
-          className="border-sage text-sage hover:bg-sage/10"
+          className="shrink-0 border-sage text-sage hover:bg-sage/10"
           disabled={disabled || loading || lineItems.filter((l) => l.name).length === 0}
           onClick={() => void runSearch()}
         >
@@ -147,27 +229,34 @@ export function DiscoveredSuppliersPanel({
         </Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-terracotta">{error}</p>
-      )}
-      {info && (
-        <p className="text-sm text-cocoa">{info}</p>
-      )}
+      {error && <p className="text-sm text-terracotta">{error}</p>}
+      {info && <p className="text-sm text-cocoa">{info}</p>}
 
-      <div className="overflow-x-auto rounded-lg border border-stripe-border bg-linen">
-        <Table>
+      <div className="space-y-2 md:hidden">
+        {tableRows.map((row) => (
+          <SupplierRowCard
+            key={row.id}
+            row={row}
+            selected={selectedIds.includes(row.id)}
+            onToggle={() => toggleId(row.id)}
+          />
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-hidden rounded-lg border border-stripe-border bg-linen md:block [&_[data-slot=table-container]]:overflow-x-hidden">
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow className="border-stripe-border hover:bg-transparent">
               <TableHead className="w-10" />
-              <TableHead>Name</TableHead>
-              <TableHead>Snippet</TableHead>
-              <TableHead>Link / phone</TableHead>
+              <TableHead className="w-[28%] text-espresso">Name</TableHead>
+              <TableHead className="w-[44%] text-espresso">Snippet</TableHead>
+              <TableHead className="w-[28%] text-espresso">Link / phone</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tableRows.map((row) => (
               <TableRow key={row.id} className="border-stripe-border">
-                <TableCell>
+                <TableCell className="whitespace-normal align-top">
                   <input
                     type="checkbox"
                     className="size-4 accent-espresso"
@@ -176,30 +265,39 @@ export function DiscoveredSuppliersPanel({
                     aria-label={`Include ${row.name} in RFQ`}
                   />
                 </TableCell>
-                <TableCell className="font-medium text-espresso">
-                  {row.name}
-                  {row.source === "mock" && (
-                    <span className="ml-2 font-mono text-[10px] uppercase text-cocoa">
-                      catalog
+                <TableCell className="max-w-0 whitespace-normal align-top">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className="truncate font-medium text-espresso"
+                      title={row.name}
+                    >
+                      {row.name}
                     </span>
-                  )}
+                    <SupplierSourceBadge source={row.source} />
+                  </div>
                 </TableCell>
-                <TableCell className="max-w-xs text-sm text-cocoa">
-                  {row.snippet}
+                <TableCell className="max-w-0 whitespace-normal align-top">
+                  <p
+                    className="break-words text-sm leading-snug text-cocoa"
+                    title={row.snippet}
+                  >
+                    {row.snippet}
+                  </p>
                 </TableCell>
-                <TableCell className="text-sm">
+                <TableCell className="max-w-0 whitespace-normal align-top text-sm">
                   {row.url ? (
                     <a
                       href={row.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-terracotta underline"
+                      className="block truncate text-indigo-accent underline-offset-2 hover:underline"
+                      title={row.url}
                     >
-                      {row.url.replace(/^https?:\/\//, "").slice(0, 40)}
+                      {linkLabel(row.url)}
                     </a>
                   ) : null}
                   {row.phone && (
-                    <span className="block font-mono text-xs text-cocoa">
+                    <span className="mt-1 block font-mono text-xs text-cocoa">
                       {row.phone}
                     </span>
                   )}

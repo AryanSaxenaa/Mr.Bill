@@ -236,7 +236,7 @@ export function NewOrderWorkspace() {
     agentSession.quoteIds.length >= 2 && Boolean(agentSession.comparisonId);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl min-w-0 space-y-6 overflow-x-hidden">
       <div>
         <p className="text-sm font-medium text-sage">New order</p>
         <h1 className="font-display text-3xl font-semibold text-espresso">
@@ -247,8 +247,8 @@ export function NewOrderWorkspace() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6 rounded-xl border border-stripe-border bg-linen p-4 card-shadow md:p-6">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
+        <div className="min-w-0 space-y-6 rounded-xl border border-stripe-border bg-linen p-4 card-shadow md:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-xs font-medium uppercase text-cocoa">
@@ -404,7 +404,7 @@ export function NewOrderWorkspace() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-stripe-border pt-4">
+          <div className="w-full min-w-0 border-t border-stripe-border pt-4">
             <DiscoveredSuppliersPanel
               lineItems={lines.filter((l) => l.sku && l.name)}
               selectedIds={selectedSupplierIds}

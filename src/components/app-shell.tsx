@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex min-h-screen overflow-x-hidden bg-surface">
       <aside className="hidden w-60 shrink-0 border-r border-stripe-border bg-linen md:flex md:flex-col">
         <div className="flex items-center gap-2 border-b border-stripe-border px-5 py-5">
           <Coffee className="size-6 text-indigo-accent" strokeWidth={1.75} />
@@ -121,7 +121,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="page-enter flex-1 p-4 md:p-8">{children}</main>
+        <main className="page-enter min-w-0 flex-1 overflow-x-hidden p-4 md:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

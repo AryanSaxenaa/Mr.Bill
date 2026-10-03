@@ -61,7 +61,7 @@ export default function OrdersPage() {
   }, [activeId, activeStage, agentSession.lineItems.length, agentSession.rfqId]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl min-w-0 space-y-8 overflow-x-hidden">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold text-espresso">
