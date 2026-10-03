@@ -375,7 +375,7 @@ export async function POST(req: Request) {
             content: JSON.stringify(blockResult),
           });
           assistantText =
-            "I have the line items ready — please confirm in the UI or reply “confirm” before I send RFQs to suppliers.";
+            "I have the line items ready - please confirm in the UI or reply “confirm” before I send RFQs to suppliers.";
           continue;
         }
 
@@ -460,7 +460,7 @@ export async function POST(req: Request) {
         assistantText = `${assistantText}\n\n${rec.summary}`.trim();
       } else if (hasAgentMailConfig()) {
         assistantText =
-          `${assistantText}\n\nRFQs sent from your quote inbox — sync supplier replies on the order desk.`.trim();
+          `${assistantText}\n\nRFQs sent from your quote inbox - sync supplier replies on the order desk.`.trim();
       }
     }
 

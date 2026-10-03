@@ -1,6 +1,6 @@
 # Mr.Bill UI direction
 
-Creative, premium fintech polish for **F&B procurement** — Stripe-inspired surfaces with Maison Layla warmth in copy and success states. Post-unified-theme (`67dd955`): landing and in-app share the same token set (navy, linen, indigo accent, sage success).
+Creative, premium fintech polish for **F&B procurement** - Stripe-inspired surfaces with Maison Layla warmth in copy and success states. Post-unified-theme (`67dd955`): landing and in-app share the same token set (navy, linen, indigo accent, sage success).
 
 **Copy rule:** Do **not** show third-party vendor names in the product UI (no “SerpAPI”, “AgentMail”, “OpenRouter” in labels). Docs and README may name integrations.
 
@@ -9,7 +9,7 @@ Creative, premium fintech polish for **F&B procurement** — Stripe-inspired sur
 ## Design thesis
 
 - **Light canvas** (`surface` / `#F6F9FC`) with **deep navy** (`navy` / `#0A2540`) and indigo→cyan gradients for emphasis.
-- **Editorial clarity** for numbers (quotes, MOQ, lead times) — Inter, not spreadsheet gray.
+- **Editorial clarity** for numbers (quotes, MOQ, lead times) - Inter, not spreadsheet gray.
 - **Motion:** purposeful (150–250ms ease-out); landing **How it works** cycles steps every ~4.5s; respect `prefers-reduced-motion`.
 
 ---
@@ -33,7 +33,7 @@ Creative, premium fintech polish for **F&B procurement** — Stripe-inspired sur
 
 ## Typography
 
-- **Inter** via `next/font` — `--font-display` and body both Inter (`globals.css`).
+- **Inter** via `next/font` - `--font-display` and body both Inter (`globals.css`).
 - Display: 600–700, tight tracking on headlines.
 - Dense tables: ~13px; base body ~15px.
 
@@ -42,14 +42,14 @@ Creative, premium fintech polish for **F&B procurement** — Stripe-inspired sur
 ## Layout
 
 - **App shell:** Left sidebar; linen cards; active nav `indigo-accent/10`.
-- **Landing:** Cruip Simple Light structure in `src/components/landing/` — navbar, hero + quote mock, stats, **How it works** (5 columns), features, CTA, footer.
+- **Landing:** Cruip Simple Light structure in `src/components/landing/` - navbar, hero + quote mock, stats, **How it works** (5 columns), features, CTA, footer.
 - **Status pills:** Indigo (RFQ), cyan tint (quotes in), sage (approved).
 
 ---
 
 ## Tone & copy
 
-- Calm operator voice — “Here’s what I heard”, “Ready to RFQ these suppliers?”
+- Calm operator voice - “Here’s what I heard”, “Ready to RFQ these suppliers?”
 - Branch names, EGP, realistic SKUs (oat milk 1L, cup 8oz, espresso blend 1kg).
 
 ---

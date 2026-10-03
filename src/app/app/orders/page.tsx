@@ -25,7 +25,7 @@ function buildActiveOrder(
 ): OrderRecord {
   return {
     id: requestId,
-    title: "Active restock — multi-branch",
+    title: "Active restock - multi-branch",
     branchId: "maadi",
     neededBy: "Friday",
     createdAt: new Date().toISOString(),
@@ -68,7 +68,7 @@ export default function OrdersPage() {
             Orders
           </h1>
           <p className="mt-1 text-cocoa">
-            Cairo branches on one desk — intake, RFQ, landed cost in EGP, approve
+            Cairo branches on one desk - intake, RFQ, landed cost in EGP, approve
           </p>
         </div>
         <Link

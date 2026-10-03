@@ -86,7 +86,7 @@ export function PasteQuoteReply() {
           Paste supplier reply
         </CardTitle>
         <p className="text-sm text-cocoa">
-          Drop an email or WhatsApp quote — Mr.Bill runs{" "}
+          Drop an email or WhatsApp quote - Mr.Bill runs{" "}
           <span className="font-mono text-xs">parse_quote_reply</span> and
           refreshes comparison when both quotes are in.
         </p>
@@ -148,7 +148,7 @@ export function PasteQuoteReply() {
         )}
         <p className="text-xs text-cocoa">
           Tip: sample text for {supplierName(supplierId)} is pre-filled for the
-          judge demo — edit or paste your own.
+          judge demo - edit or paste your own.
         </p>
       </CardContent>
     </Card>

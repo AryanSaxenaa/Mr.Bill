@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Mr.Bill — Procurement for F&B",
+  title: "Mr.Bill: Procurement for F&B",
   description:
     "Open-source procurement agent for food & beverage SMEs. RFQ, compare quotes, and update branch inventory.",
 };

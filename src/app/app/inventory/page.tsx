@@ -29,7 +29,7 @@ export default function InventoryPage() {
           Inventory
         </h1>
         <p className="mt-1 text-cocoa">
-          Maadi, Zamalek, and New Cairo — updates after you approve on the desk
+          Maadi, Zamalek, and New Cairo - updates after you approve on the desk
         </p>
       </div>
 

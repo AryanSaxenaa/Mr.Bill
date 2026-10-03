@@ -155,7 +155,7 @@ export function CompareTable({
                       )}
                     </div>
                   ) : (
-                    <span className="text-cocoa/50">—</span>
+                    <span className="text-cocoa/50">-</span>
                   )}
                 </TableCell>
               ))}

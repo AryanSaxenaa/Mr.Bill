@@ -17,7 +17,7 @@ export function buildRfqSubject(
   const name = supplierName(supplierId);
   const override = process.env.MRBILL_RFQ_TO_EMAIL?.trim();
   const prefix = override ? `[Supplier: ${name}] ` : "";
-  return `${prefix}RFQ ${rfqId} · ${requestId} — Maison Layla`;
+  return `${prefix}RFQ ${rfqId} · ${requestId} - Maison Layla`;
 }
 
 export interface RfqEmailDelivery {

@@ -112,7 +112,7 @@ export default function OrderDetailPage() {
   ]);
 
   const title = isActive
-    ? "Active restock — multi-branch"
+    ? "Active restock - multi-branch"
     : (staticOrder?.title ?? "Order");
 
   const rfqMessages = isActive ? agentSession.rfqMessages : undefined;
@@ -303,7 +303,7 @@ export default function OrderDetailPage() {
               </CardTitle>
               <p className="text-sm text-cocoa">
                 {rfqDeliveries?.some((d) => d.mode === "agentmail")
-                  ? "Sent from your quote inbox — delivery status and message IDs below."
+                  ? "Sent from your quote inbox - delivery status and message IDs below."
                   : "Practice RFQs (quote inbox not connected in this environment)."}
               </p>
             </div>
@@ -421,7 +421,7 @@ export default function OrderDetailPage() {
 
       {!isActive && staticOrder && (
         <p className="text-sm text-cocoa">
-          Historical order — open{" "}
+          Historical order - open{" "}
           <Link href="/app/orders/new" className="text-terracotta underline">
             New order
           </Link>{" "}

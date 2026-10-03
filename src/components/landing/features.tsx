@@ -37,7 +37,7 @@ const MORE_FEATURES: { title: string; body: string; icon: LucideIcon }[] = [
   {
     title: "Ask Mr.Bill",
     body:
-      "Turn messy restock notes into line items and draft RFQs — demo mode or live assistant when you are ready.",
+      "Turn messy restock notes into line items and draft RFQs - demo mode or live assistant when you are ready.",
     icon: Sparkles,
   },
   {
@@ -49,7 +49,7 @@ const MORE_FEATURES: { title: string; body: string; icon: LucideIcon }[] = [
   {
     title: "One order ID",
     body:
-      "From intake through quote compare to approval — every step stays on the same procurement record.",
+      "From intake through quote compare to approval - every step stays on the same procurement record.",
     icon: ClipboardList,
   },
 ];
@@ -87,7 +87,7 @@ export function LandingFeatures() {
               Everything your GM needs on one desk
             </h2>
             <p className="mt-4 text-lg text-cocoa">
-              AI order desk, live supplier search, and quote inbox — tuned for
+              AI order desk, live supplier search, and quote inbox - tuned for
               Cairo multi-branch cafés, not another generic chatbot shell.
             </p>
           </div>

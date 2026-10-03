@@ -32,7 +32,7 @@ export default function QuotesPage() {
         })
       : null);
 
-  const rfqLabel = agentSession.rfqId ?? "No RFQ — start from New order";
+  const rfqLabel = agentSession.rfqId ?? "No RFQ - start from New order";
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -72,7 +72,7 @@ export default function QuotesPage() {
           <CardContent className="py-10 text-center text-cocoa">
             <p className="font-display text-lg text-espresso">No quotes yet</p>
             <p className="mt-2 text-sm">
-              Start from New order — describe a Maison Layla restock, send RFQs,
+              Start from New order - describe a Maison Layla restock, send RFQs,
               then compare landed cost in EGP when quotes land.
             </p>
             <Link

@@ -61,7 +61,7 @@ function formatLineItemsConfirm(session: AgentSession): string {
   const rfqNote = hasAgentMailConfig()
     ? "I’ll send RFQs from your quote inbox when you confirm."
     : "I’ll RFQ Cairo Dairy Co. and Bean & Barrel with mock replies for the demo.";
-  return `Here’s what I heard for ${session.requestId} (needed by ${session.neededBy}, delivery focus ${session.deliveryBranch}):\n\n${lines}\n\nConfirm when this looks right — ${rfqNote}`;
+  return `Here’s what I heard for ${session.requestId} (needed by ${session.neededBy}, delivery focus ${session.deliveryBranch}):\n\n${lines}\n\nConfirm when this looks right - ${rfqNote}`;
 }
 
 async function runConfirmPipeline(
@@ -207,7 +207,7 @@ export async function runDemoAgent(
 
   return {
     assistantMessage:
-      "Tell me which branch needs what — for example oat milk in Maadi and espresso in Zamalek — and I’ll structure line items before RFQ.",
+      "Tell me which branch needs what - for example oat milk in Maadi and espresso in Zamalek - and I’ll structure line items before RFQ.",
     session,
     toolTrace,
     ui: uiHintsFromSession(session),

@@ -1,14 +1,14 @@
 # Mr.Bill MVP Specification
 
 **Product:** Open-source Waybill-style procurement desk for food & beverage SMEs (multi-branch café restock)  
-**Hackathon:** [Agents at Work](https://agentsatwork.dev) — Professional track  
+**Hackathon:** [Agents at Work](https://agentsatwork.dev) - Professional track  
 **Live:** https://mrbill-production.up.railway.app · **Repo:** https://github.com/AryanSaxenaa/Mr.Bill  
 
 **Inspiration:** Waybill-style agent loop (intake → discover → RFQ → compare → decide → inventory) **without** freight, payments, or customs. The product is an **order desk**, not a generic chatbot.
 
 ---
 
-## Impact persona: Layla — 3 cafés, Cairo
+## Impact persona: Layla - 3 cafés, Cairo
 
 Layla runs **Maison Layla**, three specialty coffee shops in Zamalek, Maadi, and New Cairo. She restocks milk, beans, pastries, and disposables weekly across branches with different peak hours.
 
@@ -55,12 +55,12 @@ Implementation: `src/lib/agent-tools.ts`, `src/lib/agent-executor.ts`, `POST /ap
 
 | Time | Scene | What judges see |
 |------|--------|-----------------|
-| 0:00 | **Hook** | Landing — five animated steps, Maison Layla |
-| 0:30 | **Intake** | `/app/request` — **Run demo script** → confirm Maadi/Zamalek line items |
-| 1:00 | **RFQ** | Confirm send — simulated or AgentMail status on order |
-| 1:30 | **Compare** | `/app/quotes` — EGP matrix, MOQ flags, paste reply optional |
+| 0:00 | **Hook** | Landing - five animated steps, Maison Layla |
+| 0:30 | **Intake** | `/app/request` - **Run demo script** → confirm Maadi/Zamalek line items |
+| 1:00 | **RFQ** | Confirm send - simulated or AgentMail status on order |
+| 1:30 | **Compare** | `/app/quotes` - EGP matrix, MOQ flags, paste reply optional |
 | 2:00 | **Recommend** | Approve split recommendation in chat or order view |
-| 2:30 | **Inventory** | `/app/inventory` — branch rows + audit |
+| 2:30 | **Inventory** | `/app/inventory` - branch rows + audit |
 | 3:00 | **Close** | Open source · `npm run dev` on 3847 · scope honesty |
 
 **Fallback:** No API keys → `src/lib/demo-agent.ts` runs the same tool pipeline. Live LLM failure → demo fallback (`llmFallback`).
@@ -73,13 +73,13 @@ Implementation: `src/lib/agent-tools.ts`, `src/lib/agent-executor.ts`, `POST /ap
 
 **Out of scope:** Payments, freight, customs, voice at dock, production WhatsApp Business API.
 
-**Success metrics (slides):** 6+ hours/week saved (chasing + compare), branch visibility, illustrative 5–15% savings on demo split — see [impact-slides.md](./impact-slides.md).
+**Success metrics (slides):** 6+ hours/week saved (chasing + compare), branch visibility, illustrative 5–15% savings on demo split - see [impact-slides.md](./impact-slides.md).
 
 ---
 
 ## Technical slice (this repo)
 
-- **UI:** Next.js App Router — `src/components/landing/*`, `/app/*` routes, unified theme ([ui-direction.md](./ui-direction.md)).
+- **UI:** Next.js App Router - `src/components/landing/*`, `/app/*` routes, unified theme ([ui-direction.md](./ui-direction.md)).
 - **State:** `src/lib/app-state.tsx` + localStorage (inventory, audit, agent session).
 - **API:** `/api/agent`, `/api/suppliers/search`, AgentMail sync + webhook, `/api/health`.
 - **Port:** **3847** local; **`PORT`** on Railway.

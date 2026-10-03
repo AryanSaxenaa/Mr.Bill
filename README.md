@@ -1,20 +1,20 @@
 # Mr.Bill
 
-**Open-source Waybill-style procurement desk for food & beverage SMEs** — not a generic chatbot. Layla describes a Friday restock in plain language; Mr.Bill structures branch line items, discovers suppliers, sends RFQ email, compares quotes in EGP, recommends a split order, and syncs inventory after she approves. Freight, payments, and customs stay out of scope.
+**Open-source Waybill-style procurement desk for food & beverage SMEs** - not a generic chatbot. Layla describes a Friday restock in plain language; Mr.Bill structures branch line items, discovers suppliers, sends RFQ email, compares quotes in EGP, recommends a split order, and syncs inventory after she approves. Freight, payments, and customs stay out of scope.
 
 | | |
 |---|---|
 | **Live app** | [mrbill-production.up.railway.app](https://mrbill-production.up.railway.app) |
 | **Source** | [github.com/AryanSaxenaa/Mr.Bill](https://github.com/AryanSaxenaa/Mr.Bill) |
 | **Hackathon** | [Agents at Work](https://agentsatwork.dev) · Professional track |
-| **Persona** | **Maison Layla** — Zamalek, Maadi, New Cairo |
+| **Persona** | **Maison Layla** - Zamalek, Maadi, New Cairo |
 | **License** | MIT ([LICENSE](./LICENSE)) |
 
 ---
 
 ## What it does (How it works)
 
-Same five steps as the landing page — one order ID from intake to approval:
+Same five steps as the landing page - one order ID from intake to approval:
 
 | Step | User-facing name | What happens |
 |------|------------------|--------------|
@@ -26,11 +26,11 @@ Same five steps as the landing page — one order ID from intake to approval:
 
 **Integrations (server-side, with demo fallbacks):**
 
-- **[OpenRouter](https://openrouter.ai)** / **[DeepSeek](https://api.deepseek.com)** / OpenAI — optional live agent on `/app/request` (`src/lib/llm-client.ts`)
-- **[SerpAPI](https://serpapi.com)** — Google wholesale discovery (`find_suppliers`, `POST /api/suppliers/search`)
-- **[AgentMail](https://agentmail.to)** — real RFQ email + inbound webhook (`send_rfq`, `POST /api/webhooks/agentmail`)
+- **[OpenRouter](https://openrouter.ai)** / **[DeepSeek](https://api.deepseek.com)** / OpenAI - optional live agent on `/app/request` (`src/lib/llm-client.ts`)
+- **[SerpAPI](https://serpapi.com)** - Google wholesale discovery (`find_suppliers`, `POST /api/suppliers/search`)
+- **[AgentMail](https://agentmail.to)** - real RFQ email + inbound webhook (`send_rfq`, `POST /api/webhooks/agentmail`)
 
-Without API keys, judges still get the full tool pipeline via the scripted demo agent and catalog fallbacks — same UI, same five tools.
+Without API keys, judges still get the full tool pipeline via the scripted demo agent and catalog fallbacks - same UI, same five tools.
 
 ---
 
@@ -40,7 +40,7 @@ Without API keys, judges still get the full tool pipeline via the scripted demo 
 git clone https://github.com/AryanSaxenaa/Mr.Bill.git
 cd Mr.Bill
 npm install
-cp .env.example .env.local   # optional — see env table below
+cp .env.example .env.local   # optional - see env table below
 npm run dev
 ```
 
@@ -62,7 +62,7 @@ With `npm run dev` running: `npm run test:api` (or `MR_BILL_BASE_URL=http://127.
 
 ## Environment variables
 
-Copy [`.env.example`](./.env.example) to `.env.local` — **never commit** secrets. Production: Railway **Variables** only.
+Copy [`.env.example`](./.env.example) to `.env.local` - **never commit** secrets. Production: Railway **Variables** only.
 
 ### LLM (optional live agent)
 
@@ -107,15 +107,15 @@ Rotate any key that was pasted in chat or committed.
 Browser (Layla)
     │
     ▼
-Next.js App Router — landing + /app/* (dashboard, request, quotes, orders, inventory)
+Next.js App Router - landing + /app/* (dashboard, request, quotes, orders, inventory)
     │  shared session: localStorage via src/lib/app-state.tsx
     ▼
 API routes
-    POST /api/agent              — demo agent OR OpenAI-compatible tool loop
-    GET  /api/agent/config       — liveAgent, integration flags
-    POST /api/suppliers/search   — SerpAPI (key server-only)
-    POST /api/agentmail/sync     — pull inbound replies
-    POST /api/webhooks/agentmail — AgentMail events
+    POST /api/agent              - demo agent OR OpenAI-compatible tool loop
+    GET  /api/agent/config       - liveAgent, integration flags
+    POST /api/suppliers/search   - SerpAPI (key server-only)
+    POST /api/agentmail/sync     - pull inbound replies
+    POST /api/webhooks/agentmail - AgentMail events
     GET  /api/health
     ▼
 src/lib/agent-executor.ts → agent-tools.ts
@@ -145,7 +145,7 @@ Full checklist: **[docs/SUBMISSION.md](./docs/SUBMISSION.md)** · Slide copy: **
 
 | Time | Route | Action |
 |------|--------|--------|
-| 0:00 | `/` | Landing — five-step story, Maison Layla |
+| 0:00 | `/` | Landing - five-step story, Maison Layla |
 | 0:30 | `/app/request` | **Run demo script** → confirm line items → **Confirm & send RFQ** |
 | 1:30 | `/app/quotes` | Comparison matrix · **Paste supplier reply** (optional) |
 | 2:00 | `/app/request` or order detail | **Approve recommendation** |
@@ -168,5 +168,5 @@ No API key required for the judge path. `npm run build` and `npm run test:api` p
 
 ## Credits
 
-- **Landing template** — [Cruip Simple Light](https://github.com/cruip/tailwind-landing-page-template) · assets under `public/assets/landing/`
-- **In-app illustrations** — unDraw (MIT) via `undraw-svg` · see [docs/ui-direction.md](./docs/ui-direction.md)
+- **Landing template** - [Cruip Simple Light](https://github.com/cruip/tailwind-landing-page-template) · assets under `public/assets/landing/`
+- **In-app illustrations** - unDraw (MIT) via `undraw-svg` · see [docs/ui-direction.md](./docs/ui-direction.md)

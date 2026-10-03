@@ -21,7 +21,7 @@ export function LandingFooter() {
               <span className="font-display text-lg font-semibold text-navy">Mr.Bill</span>
             </div>
             <p className="max-w-xs text-sm text-cocoa">
-              Order desk for Cairo multi-branch cafés — chat, RFQ, compare, sync.
+              Order desk for Cairo multi-branch cafés - chat, RFQ, compare, sync.
               MIT License.
             </p>
           </div>

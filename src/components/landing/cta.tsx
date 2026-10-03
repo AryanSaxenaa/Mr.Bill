@@ -10,7 +10,7 @@ export function LandingCta() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
             Run the full chat → supplier → quote → approve flow for Maison Layla’s
-            branches — landed cost in EGP before your next delivery window.
+            branches - landed cost in EGP before your next delivery window.
           </p>
           <div className="mx-auto mt-8 max-w-xs sm:flex sm:max-w-none sm:justify-center sm:gap-4">
             <Link

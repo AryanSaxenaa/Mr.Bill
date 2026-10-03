@@ -194,7 +194,7 @@ export const ACTIVE_ORDER_ID = DEMO_REQUEST_ID;
 export const DEMO_ORDERS: OrderRecord[] = [
   {
     id: "ORD-2026-0138",
-    title: "Weekly dairy & cups — Maadi",
+    title: "Weekly dairy & cups - Maadi",
     branchId: "maadi",
     neededBy: "2026-09-28",
     createdAt: "2026-09-24T10:00:00Z",
@@ -206,7 +206,7 @@ export const DEMO_ORDERS: OrderRecord[] = [
   },
   {
     id: "ORD-2026-0140",
-    title: "Espresso restock — Zamalek",
+    title: "Espresso restock - Zamalek",
     branchId: "zamalek",
     neededBy: "2026-10-01",
     createdAt: "2026-09-29T14:30:00Z",
@@ -217,7 +217,7 @@ export const DEMO_ORDERS: OrderRecord[] = [
   },
   {
     id: "ORD-2026-0141",
-    title: "Disposables top-up — New Cairo",
+    title: "Disposables top-up - New Cairo",
     branchId: "new-cairo",
     neededBy: "2026-10-05",
     createdAt: "2026-10-01T09:15:00Z",
@@ -324,7 +324,7 @@ export const MOCK_QUOTES: Quote[] = [
 ];
 
 export const MOCK_QUOTE_REPLIES: Record<string, string> = {
-  "cairo-dairy": `Thanks Layla — Cairo Dairy Co.
+  "cairo-dairy": `Thanks Layla - Cairo Dairy Co.
 Oat milk 1L: EGP 42.50/carton (MOQ 24), delivery tomorrow.
 Cups 8oz case of 1000: EGP 1,180 (MOQ 2 cases), 2 days.
 Espresso blend 1kg: EGP 890/bag, 4 days lead.
@@ -332,7 +332,7 @@ Valid until Oct 10.`,
   "bean-barrel": `Bean & Barrel wholesale reply:
 Oat 1L @ 44 EGP/carton, 2-day delivery.
 Cups 8oz @ 1,240 EGP/case, 3 days.
-House espresso 1kg @ 820 EGP, 2-day — we can ship to Zamalek Friday AM.
+House espresso 1kg @ 820 EGP, 2-day - we can ship to Zamalek Friday AM.
 Quote valid to Oct 9.`,
 };
 

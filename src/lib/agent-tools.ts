@@ -169,7 +169,7 @@ export function sendRfq(input: SendRfqInput): SendRfqOutput {
       : "";
     return {
       supplierId,
-      body: `Hi ${name},\n\nRFQ ${MOCK_RFQ_ID} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n${contactLine ? `\n${contactLine}\n` : ""}\n— Mr.Bill (on behalf of Layla)`,
+      body: `Hi ${name},\n\nRFQ ${MOCK_RFQ_ID} from Maison Layla.\nNeeded by: ${input.neededBy}\nPrimary delivery: ${input.deliveryBranch}\n\n${linesText}\n\nPlease reply with unit pricing, MOQ, and lead time.\n${contactLine ? `\n${contactLine}\n` : ""}\n- Mr.Bill (on behalf of Layla)`,
     };
   });
 

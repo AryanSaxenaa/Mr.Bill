@@ -210,7 +210,7 @@ export function DiscoveredSuppliersPanel({
             Discovered suppliers
           </h2>
           <p className="text-sm text-cocoa">
-            Select RFQ recipients — catalog suppliers merge with web discovery.
+            Select RFQ recipients - catalog suppliers merge with web discovery.
           </p>
         </div>
         <Button

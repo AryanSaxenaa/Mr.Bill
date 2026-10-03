@@ -64,7 +64,7 @@ function mockCatalogResults(query: string): SupplierSearchResult {
       id: s.id,
       name: s.name,
       url: `https://${s.contact.split("@")[1] ?? "example.com"}`,
-      snippet: `${s.name} — local Cairo F&B supplier (${s.contact}).`,
+      snippet: `${s.name} - local Cairo F&B supplier (${s.contact}).`,
       source: "mock" as const,
       phone: undefined,
     })).slice(0, MAX_RESULTS),

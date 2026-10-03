@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ClipboardList,
   Table2,
   Package,
-  Coffee,
   PlusCircle,
 } from "lucide-react";
 import { BRANCHES, type BranchId } from "@/lib/mock-data";
@@ -46,15 +46,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-surface">
       <aside className="hidden w-60 shrink-0 border-r border-stripe-border bg-linen md:flex md:flex-col">
-        <div className="flex items-center gap-2 border-b border-stripe-border px-5 py-5">
-          <Coffee className="size-6 text-indigo-accent" strokeWidth={1.75} />
+        <Link
+          href="/"
+          className="flex items-center gap-2 border-b border-stripe-border px-5 py-5 transition hover:bg-surface/50"
+        >
+          <Image
+            src="/assets/icons/coffee-bean.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="size-7"
+          />
           <div>
             <p className="text-lg font-semibold tracking-tight text-navy">
               Mr.Bill
             </p>
             <p className="text-xs text-cocoa">Order desk · Maison Layla</p>
           </div>
-        </div>
+        </Link>
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
           {NAV.map((item) => {
             const active = isActive(item.href);
@@ -82,12 +91,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-stripe-border bg-linen/90 px-4 py-3 backdrop-blur-sm md:px-8">
-          <div className="flex items-center gap-2 md:hidden">
-            <Coffee className="size-5 text-indigo-accent" strokeWidth={1.75} />
+          <Link href="/" className="flex items-center gap-2 md:hidden">
+            <Image
+              src="/assets/icons/coffee-bean.svg"
+              alt=""
+              width={24}
+              height={24}
+              className="size-6"
+            />
             <span className="font-semibold text-navy">Mr.Bill</span>
-          </div>
+          </Link>
           <p className="text-sm text-cocoa">
-            Maison Layla · chat to vendor to quote — no spreadsheet chaos
+            Maison Layla · chat to vendor to quote - no spreadsheet chaos
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button

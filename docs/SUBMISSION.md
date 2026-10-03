@@ -1,4 +1,4 @@
-# Mr.Bill — Hackathon submission guide
+# Mr.Bill: Hackathon submission guide
 
 **Event:** [Agents at Work](https://agentsatwork.dev) · Professional track  
 **Repository:** https://github.com/AryanSaxenaa/Mr.Bill  
@@ -23,7 +23,7 @@ Optional live integrations (LLM, SerpAPI, AgentMail):
 
 ```bash
 cp .env.example .env.local
-# Add keys — see README.md env table
+# Add keys - see README.md env table
 ```
 
 Never commit `.env.local` or any API keys. Set production secrets only in **Railway Variables**.
@@ -69,7 +69,7 @@ npm run build
 
 | Time | Route | Action |
 |------|--------|--------|
-| 0:00 | `/` | Landing — five-step procurement story, three Cairo cafés |
+| 0:00 | `/` | Landing - five-step procurement story, three Cairo cafés |
 | 0:30 | `/app/request` | **Run demo script** → **Confirm & send RFQ** |
 | 1:30 | `/app/quotes` | Comparison table · **Paste supplier reply** (optional) |
 | 2:00 | `/app/request` or `/app/orders/ORD-2026-0142` | **Approve recommendation** |
@@ -78,7 +78,7 @@ npm run build
 
 **Reset between takes:** **Reset demo data** in the app header.
 
-`GET /api/agent/config` — `liveAgent: false` = keyless demo; with keys, live chat uses the same six tools with demo fallback on failure.
+`GET /api/agent/config` - `liveAgent: false` = keyless demo; with keys, live chat uses the same six tools with demo fallback on failure.
 
 ---
 
@@ -91,7 +91,7 @@ npm run build
 
 ### AgentMail (RFQ email)
 
-1. Set `AGENTMAIL_API_KEY` in `.env.local` — **never commit**.
+1. Set `AGENTMAIL_API_KEY` in `.env.local` - **never commit**.
 2. Optional `MRBILL_RFQ_TO_EMAIL=you@example.com` for judge-safe inbox routing.
 3. RFQ panel shows send status with message id when live.
 4. Reply by email or paste on `/app/quotes` → **Sync supplier replies** on order detail.
@@ -144,6 +144,6 @@ Rotate AgentMail or SerpAPI keys if they were exposed.
 
 ## Related docs
 
-- [README.md](../README.md) — pitch, architecture, env vars
-- [docs/mvp-spec.md](./mvp-spec.md) — persona, tools, demo script
-- [docs/ui-direction.md](./ui-direction.md) — unified theme (no vendor names in UI)
+- [README.md](../README.md) - pitch, architecture, env vars
+- [docs/mvp-spec.md](./mvp-spec.md) - persona, tools, demo script
+- [docs/ui-direction.md](./ui-direction.md) - unified theme (no vendor names in UI)

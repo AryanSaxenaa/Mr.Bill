@@ -318,7 +318,7 @@ export function NewOrderWorkspace() {
                         colSpan={6}
                         className="py-8 text-center text-sm text-cocoa"
                       >
-                        No lines yet — add rows or use Ask Mr.Bill to parse a
+                        No lines yet - add rows or use Ask Mr.Bill to parse a
                         restock note.
                       </TableCell>
                     </TableRow>

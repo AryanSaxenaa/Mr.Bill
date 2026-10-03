@@ -133,7 +133,7 @@ export function LandingHero() {
             <h1
               className="font-display mb-6 border-y text-5xl font-semibold text-navy [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-300/.8),transparent)1] md:text-6xl"
             >
-              Chat to vendor to quote —{" "}
+              Chat to vendor to quote.{" "}
               <br className="max-lg:hidden" />
               without the WhatsApp chaos
             </h1>
@@ -141,7 +141,7 @@ export function LandingHero() {
               <p className="mb-8 text-lg text-cocoa">
                 Mr.Bill is the order desk for Cairo multi-branch cafés: describe
                 a restock in plain language, discover suppliers, collect quotes in
-                EGP, compare landed cost, and sync inventory — one order ID from
+                EGP, compare landed cost, and sync inventory - one order ID from
                 intake to approval.
               </p>
               <div className="relative before:absolute before:inset-0 before:border-y before:[border-image:linear-gradient(to_right,transparent,--theme(--color-slate-300/.8),transparent)1]">

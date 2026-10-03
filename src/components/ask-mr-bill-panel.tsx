@@ -36,7 +36,7 @@ export function AskMrBillPanel({
           </h2>
         </div>
         <p className="mt-1 text-xs text-cocoa">
-          Natural language fill — parses into the line table. Use action buttons
+          Natural language fill - parses into the line table. Use action buttons
           on the form to RFQ and compare.
         </p>
       </div>
@@ -44,7 +44,7 @@ export function AskMrBillPanel({
       <div className="flex flex-1 flex-col gap-3 p-4">
         {agentMode === "demo" && (
           <p className="rounded-md border border-sage/30 bg-sage/10 px-2 py-1.5 text-xs text-espresso">
-            Demo mode — full order desk flow; connect an AI key for live assistant.
+            Demo mode - full order desk flow; connect an AI key for live assistant.
           </p>
         )}
 
@@ -60,7 +60,7 @@ export function AskMrBillPanel({
           >
             {llmNotice.startsWith("deepseek-retry:")
               ? "Retried with backup model after the primary AI was unavailable."
-              : `AI order desk unavailable — demo path used.`}
+              : `AI order desk unavailable - demo path used.`}
           </p>
         )}
 
