@@ -4,6 +4,22 @@ Open-source procurement agent for food & beverage SMEs — multi-branch café re
 
 **Persona:** Layla runs **Maison Layla** (Zamalek, Maadi, New Cairo). She describes restock needs in plain language; Mr.Bill structures RFQs, compares supplier quotes in EGP, recommends a split order, and updates branch inventory after approval.
 
+## Environment (live agent)
+
+The chat on `/app/request` calls **`POST /api/agent`** with an OpenAI tool loop (five procurement tools). Copy the example env file and add your key:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local — set OPENAI_API_KEY=sk-...
+```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes (for live agent) | OpenAI API key; route returns **503** with a clear message if missing |
+| `OPENAI_MODEL` | No | Defaults to `gpt-4o-mini` |
+
+Supplier quotes and RFQ delivery are **mocked** in `src/lib/mock-data.ts` so hackathon demos stay reliable; `send_rfq` auto-parses canned replies from Cairo Dairy Co. and Bean & Barrel.
+
 ## Judge run (2–3 min demo)
 
 ```bash
@@ -16,13 +32,13 @@ Open **http://localhost:3847**
 | Step | Route | Action |
 |------|--------|--------|
 | Hook | `/` | Landing — procurement on autopilot, 3 cafés |
-| Intake | `/app/request` | Send pre-filled message → confirm line items → **Confirm & send RFQ** |
-| RFQ | same | **Paste supplier replies (demo)** |
-| Compare | `/app/quotes` | Side-by-side table, MOQ / lead time, sage highlight on best unit cost |
-| Decide | chat or Quotes | **Approve recommendation** (~EGP 840 savings vs single supplier) |
-| Inventory | `/app/inventory` | Maadi oat milk + cups, Zamalek blend updated; audit “Approved by Layla” |
+| Intake | `/app/request` | Send pre-filled Layla message → agent structures line items → **Confirm & send RFQ** |
+| RFQ + quotes | same | Agent runs `send_rfq` + auto mock `parse_quote_reply` → compare + recommend in chat |
+| Compare | `/app/quotes` | Same comparison table (MOQ / lead time, sage = best unit cost) |
+| Decide | chat | **Approve recommendation** (split order + savings summary) |
+| Inventory | `/app/inventory` | Rows updated via `update_inventory` (persisted in **localStorage** for demo) |
 
-**Fallback:** Pre-seeded mock data in `src/lib/mock-data.ts` and tools in `src/lib/agent-tools.ts` — the UI works without a live LLM.
+**Without API key:** chat shows an error banner; set `OPENAI_API_KEY` to run E2E. Tool implementations remain in `src/lib/agent-tools.ts` for tests and fallback data.
 
 ## Stack
 
@@ -40,7 +56,7 @@ Open **http://localhost:3847**
 | `recommend` | same |
 | `update_inventory` | same |
 
-Ready to wire to Convex / LLM post-hackathon.
+Live loop: `src/app/api/agent/route.ts` → `src/lib/agent-executor.ts` → `src/lib/agent-tools.ts`.
 
 ## Scripts
 

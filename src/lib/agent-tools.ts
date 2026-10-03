@@ -93,6 +93,7 @@ export interface UpdateInventoryInput {
   requestId: string;
   recommendationId: string;
   approvedBy: string;
+  allocations?: Allocation[];
 }
 
 export interface InventoryDelta {
@@ -218,37 +219,86 @@ export function compareQuotes(input: CompareQuotesInput): CompareQuotesOutput {
   };
 }
 
-export function recommend(input: RecommendInput): RecommendOutput {
-  const allocations: Allocation[] = [
-    {
-      sku: "OAT-1L",
-      supplierId: "cairo-dairy",
-      qty: 48,
-      rationale: "Lowest landed cost (EGP 42.50/carton) with next-day delivery.",
-    },
-    {
-      sku: "CUP-8OZ",
-      supplierId: "cairo-dairy",
-      qty: 4,
-      rationale: "MOQ bundle with dairy order; beats Nile on unit cost.",
-    },
-    {
-      sku: "ESP-1KG",
-      supplierId: "bean-barrel",
-      qty: 2,
-      rationale: "2-day lead to Zamalek; EGP 820/kg vs 890 from Cairo Dairy.",
-    },
-  ];
+function quoteUnitPrice(supplierId: string, sku: string): number {
+  const quote = MOCK_QUOTES.find((q) => q.supplierId === supplierId);
+  const line = quote?.lines.find((l) => l.sku === sku);
+  return line?.unitPrice ?? 0;
+}
 
-  const singleSupplierCost =
-    48 * 44 + 4 * 1240 + 2 * 890;
-  const splitCost = 48 * 42.5 + 4 * 1180 + 2 * 820;
-  const savingsEgp = Math.round(singleSupplierCost - splitCost);
+export function recommend(
+  input: RecommendInput,
+  comparison?: CompareQuotesOutput,
+  lineItems?: LineItem[],
+): RecommendOutput {
+  const items = lineItems ?? [];
+  const comp =
+    comparison ??
+    compareQuotes({
+      requestId: input.requestId,
+      quoteIds: MOCK_QUOTES.map((q) => q.id),
+    });
+
+  const allocations: Allocation[] = items.map((item) => {
+    const best = comp.metrics[item.sku];
+    const supplierId = best?.bestSupplierId ?? "cairo-dairy";
+    const price = best?.bestUnitCost ?? quoteUnitPrice(supplierId, item.sku);
+    return {
+      sku: item.sku,
+      supplierId,
+      qty: item.qty,
+      rationale: `Best unit cost EGP ${price} from ${supplierName(supplierId)}.`,
+    };
+  });
+
+  if (allocations.length === 0) {
+    allocations.push(
+      {
+        sku: "OAT-1L",
+        supplierId: "cairo-dairy",
+        qty: 48,
+        rationale:
+          "Lowest landed cost (EGP 42.50/carton) with next-day delivery.",
+      },
+      {
+        sku: "CUP-8OZ",
+        supplierId: "cairo-dairy",
+        qty: 4,
+        rationale: "MOQ bundle with dairy order; beats Nile on unit cost.",
+      },
+      {
+        sku: "ESP-1KG",
+        supplierId: "bean-barrel",
+        qty: 2,
+        rationale: "2-day lead to Zamalek; EGP 820/kg vs 890 from Cairo Dairy.",
+      },
+    );
+  }
+
+  const primarySupplier = allocations[0]?.supplierId ?? "cairo-dairy";
+  const splitCost = allocations.reduce(
+    (sum, a) => sum + a.qty * quoteUnitPrice(a.supplierId, a.sku),
+    0,
+  );
+  const singleSupplierCost = allocations.reduce(
+    (sum, a) => sum + a.qty * quoteUnitPrice(primarySupplier, a.sku),
+    0,
+  );
+  const savingsEgp = Math.max(0, Math.round(singleSupplierCost - splitCost));
+
+  const fallbackSupplier =
+    primarySupplier === "cairo-dairy" ? "bean-barrel" : "cairo-dairy";
+
+  const summary = `Split order: ${allocations
+    .map(
+      (a) =>
+        `${a.sku} from ${supplierName(a.supplierId)} (${a.qty} units)`,
+    )
+    .join("; ")}. Saves ~EGP ${savingsEgp} vs ordering everything from ${supplierName(primarySupplier)}. Fallback if ${supplierName(primarySupplier)} declines: re-run with ${supplierName(fallbackSupplier)} on espresso/cups lines.`;
 
   return {
     recommendationId: `REC-${input.requestId}-01`,
     allocations,
-    summary: `Split: oat milk from Cairo Dairy (lowest landed cost), cups from Cairo Dairy MOQ bundle, blend from Bean & Barrel (2-day lead). Saves ~EGP ${savingsEgp} vs single supplier.`,
+    summary,
     confidence: 0.92,
     savingsEgp,
   };
@@ -257,12 +307,24 @@ export function recommend(input: RecommendInput): RecommendOutput {
 export function updateInventory(
   input: UpdateInventoryInput,
   current: { branchId: string; sku: string; qty: number }[],
+  lineItems?: LineItem[],
 ): UpdateInventoryOutput {
-  const deltas: { branchId: string; sku: string; delta: number }[] = [
-    { branchId: "maadi", sku: "OAT-1L", delta: 48 },
-    { branchId: "maadi", sku: "CUP-8OZ", delta: 4 },
-    { branchId: "zamalek", sku: "ESP-1KG", delta: 2 },
-  ];
+  const branchBySku = new Map(
+    (lineItems ?? []).map((l) => [l.sku, l.branchId]),
+  );
+
+  const deltas: { branchId: string; sku: string; delta: number }[] =
+    input.allocations && input.allocations.length > 0
+      ? input.allocations.map((a) => ({
+          branchId: branchBySku.get(a.sku) ?? "maadi",
+          sku: a.sku,
+          delta: a.qty,
+        }))
+      : [
+          { branchId: "maadi", sku: "OAT-1L", delta: 48 },
+          { branchId: "maadi", sku: "CUP-8OZ", delta: 4 },
+          { branchId: "zamalek", sku: "ESP-1KG", delta: 2 },
+        ];
 
   const inventoryDeltas: InventoryDelta[] = deltas.map((d) => {
     const row = current.find(

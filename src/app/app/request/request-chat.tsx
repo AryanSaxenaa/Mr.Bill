@@ -10,20 +10,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CompareTable } from "@/components/compare-table";
 import {
   DEMO_INTAKE_TEXT,
-  MOCK_QUOTE_REPLIES,
-  PARSED_LINE_ITEMS,
   branchName,
-  supplierName,
+  type LineItem,
 } from "@/lib/mock-data";
-import {
-  sendRfq,
-  parseQuoteReply,
-  recommend,
-  updateInventory,
-  ACTIVE_REQUEST_ID,
-} from "@/lib/agent-tools";
+import { ACTIVE_REQUEST_ID } from "@/lib/agent-tools";
 import { useAppState } from "@/lib/app-state";
-import { Check, Send } from "lucide-react";
+import {
+  DEFAULT_SESSION,
+  type AgentSession,
+  type AgentUiHints,
+} from "@/lib/agent-session";
+import type { InventoryDelta } from "@/lib/agent-tools";
+import { Check, Loader2, Send } from "lucide-react";
 
 type MessageRole = "user" | "assistant";
 
@@ -34,120 +32,165 @@ interface ChatMessage {
   rich?: "confirm" | "compare" | "recommend";
 }
 
+interface AgentApiSuccess {
+  assistantMessage: string;
+  session: AgentSession;
+  toolTrace?: { name: string; summary: string }[];
+  inventoryDeltas?: InventoryDelta[];
+  ui: AgentUiHints;
+  error?: string;
+  code?: string;
+}
+
 export function RequestChat() {
   const searchParams = useSearchParams();
-  const { setRequestStatus, applyInventoryApproval, inventory, requestStatus } =
-    useAppState();
+  const {
+    setRequestStatus,
+    applyInventoryDeltas,
+    inventory,
+    requestStatus,
+  } = useAppState();
   const [input, setInput] = useState(DEMO_INTAKE_TEXT);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
       content:
-        "Here’s what I heard — describe what each branch needs and I’ll structure it before we RFQ suppliers.",
+        "Describe what each branch needs — I’ll structure line items and confirm before we RFQ Cairo suppliers.",
     },
   ]);
-  const [step, setStep] = useState<
-    "intake" | "confirm" | "rfq" | "parse" | "compare" | "done"
-  >("intake");
+  const [session, setSession] = useState<AgentSession>(DEFAULT_SESSION);
+  const [ui, setUi] = useState<AgentUiHints>({
+    showLineItemsConfirm: false,
+    showCompareTable: false,
+    showApproveButton: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [step, setStep] = useState<"active" | "done">("active");
 
   const append = useCallback((msg: Omit<ChatMessage, "id">) => {
-    setMessages((prev) => [...prev, { ...msg, id: `m-${prev.length}` }]);
+    setMessages((prev) => [...prev, { ...msg, id: `m-${prev.length}-${Date.now()}` }]);
   }, []);
 
-  const handleApprove = useCallback(() => {
-    const rec = recommend({
-      requestId: ACTIVE_REQUEST_ID,
-      comparisonId: `CMP-${ACTIVE_REQUEST_ID}`,
-    });
-    const result = updateInventory(
-      {
-        requestId: ACTIVE_REQUEST_ID,
-        recommendationId: rec.recommendationId,
-        approvedBy: "Layla",
-      },
+  const inventorySnapshot = useCallback(
+    () =>
       inventory.map((r) => ({
         branchId: r.branchId,
         sku: r.sku,
         qty: r.qty,
       })),
-    );
-    applyInventoryApproval("Layla");
-    append({
-      role: "assistant",
-      content: `Approved. Updated ${result.inventoryDeltas.length} inventory rows. Audit ${result.auditLogId}.`,
-    });
-    setStep("done");
-  }, [append, applyInventoryApproval, inventory]);
+    [inventory],
+  );
+
+  const callAgent = useCallback(
+    async (payload: {
+      message?: string;
+      confirmAction?: "send_rfq" | "approve";
+    }) => {
+      setLoading(true);
+      setApiError(null);
+      const history = messages
+        .filter((m) => m.id !== "welcome")
+        .map((m) => ({ role: m.role, content: m.content }));
+
+      try {
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: payload.message ?? "",
+            confirmAction: payload.confirmAction,
+            history,
+            session,
+            inventory: inventorySnapshot(),
+          }),
+        });
+
+        const data = (await res.json()) as AgentApiSuccess & {
+          error?: string;
+          code?: string;
+        };
+
+        if (!res.ok) {
+          setApiError(data.error ?? `Agent error (${res.status})`);
+          return;
+        }
+
+        setSession(data.session);
+        setUi(data.ui);
+
+        if (data.session.status === "rfq_sent" || data.session.rfqId) {
+          setRequestStatus("rfq_sent");
+        }
+        if (data.session.status === "quotes_ready" || data.session.comparisonId) {
+          setRequestStatus("quotes_parsed");
+        }
+        if (data.session.status === "awaiting_confirm") {
+          setRequestStatus("confirmed");
+        }
+
+        const richCompare =
+          data.ui.showCompareTable || Boolean(data.session.comparisonId);
+        const richRecommend = Boolean(data.session.recommendation);
+
+        append({
+          role: "assistant",
+          content: data.assistantMessage,
+          rich: richRecommend
+            ? "recommend"
+            : richCompare
+              ? "compare"
+              : data.ui.showLineItemsConfirm
+                ? "confirm"
+                : undefined,
+        });
+
+        if (data.inventoryDeltas?.length) {
+          applyInventoryDeltas(data.inventoryDeltas, "Layla");
+          setStep("done");
+          setRequestStatus("approved");
+        }
+      } catch {
+        setApiError("Could not reach the agent API. Is the dev server running?");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      append,
+      applyInventoryDeltas,
+      inventorySnapshot,
+      messages,
+      session,
+      setRequestStatus,
+    ],
+  );
 
   const handleSendIntake = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
     append({ role: "user", content: input.trim() });
-    append({
-      role: "assistant",
-      content:
-        "Got it. I split this by branch — confirm before I contact Cairo Dairy Co. and Bean & Barrel.",
-      rich: "confirm",
-    });
-    setStep("confirm");
-    setRequestStatus("confirmed");
+    const text = input.trim();
     setInput("");
+    void callAgent({ message: text });
   };
 
   const handleConfirm = () => {
-    const rfq = sendRfq({
-      requestId: ACTIVE_REQUEST_ID,
-      supplierIds: ["cairo-dairy", "bean-barrel"],
-      lineItems: PARSED_LINE_ITEMS,
-      deliveryBranch: "Maadi",
-      neededBy: "Friday",
-    });
-    append({
-      role: "assistant",
-      content: `RFQ ${rfq.rfqId} drafted and sent (simulated) to ${rfq.messages
-        .map((m) => supplierName(m.supplierId))
-        .join(" and ")}. Status: Sent.`,
-    });
-    setStep("rfq");
-    setRequestStatus("rfq_sent");
+    void callAgent({ message: "Confirm — send RFQs to suppliers.", confirmAction: "send_rfq" });
   };
 
-  const handleParseQuotes = () => {
-    for (const supplierId of ["cairo-dairy", "bean-barrel"] as const) {
-      const parsed = parseQuoteReply({
-        rfqId: "RFQ-2026-0042",
-        supplierId,
-        rawText: MOCK_QUOTE_REPLIES[supplierId],
-      });
-      append({
-        role: "assistant",
-        content: `Parsed reply from ${supplierName(supplierId)} → ${parsed.quoteId} (${parsed.lines.length} lines, valid until ${parsed.validUntil}).`,
-      });
-    }
-    append({
-      role: "assistant",
-      content:
-        "Side-by-side comparison — best landed unit cost highlighted in sage.",
-      rich: "compare",
-    });
-    const rec = recommend({
-      requestId: ACTIVE_REQUEST_ID,
-      comparisonId: `CMP-${ACTIVE_REQUEST_ID}`,
-    });
-    append({
-      role: "assistant",
-      content: rec.summary,
-      rich: "recommend",
-    });
-    setStep("compare");
-    setRequestStatus("quotes_parsed");
-  };
+  const handleApprove = useCallback(() => {
+    void callAgent({ message: "Approve the recommendation.", confirmAction: "approve" });
+  }, [callAgent]);
 
   useEffect(() => {
-    if (searchParams.get("step") === "approve" && step === "compare") {
+    if (searchParams.get("step") === "approve" && ui.showApproveButton) {
       handleApprove();
     }
-  }, [searchParams, step, handleApprove]);
+  }, [searchParams, ui.showApproveButton, handleApprove]);
+
+  const lineItems: LineItem[] =
+    session.lineItems.length > 0 ? session.lineItems : [];
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -157,6 +200,15 @@ export function RequestChat() {
         </h1>
         <p className="mt-1 font-mono text-sm text-cocoa">{ACTIVE_REQUEST_ID}</p>
       </div>
+
+      {apiError && (
+        <div
+          className="rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-espresso"
+          role="alert"
+        >
+          {apiError}
+        </div>
+      )}
 
       <div className="flex min-h-[480px] flex-col rounded-xl border border-oat bg-linen card-shadow">
         <ScrollArea className="flex-1 p-4 md:p-6">
@@ -173,24 +225,25 @@ export function RequestChat() {
               >
                 <p className="whitespace-pre-wrap">{msg.content}</p>
 
-                {msg.rich === "confirm" && (
+                {msg.rich === "confirm" && lineItems.length > 0 && (
                   <div className="mt-4 space-y-2 rounded-lg border border-oat bg-linen p-3">
                     <p className="text-xs font-medium uppercase text-cocoa">
                       Line items
                     </p>
                     <ul className="space-y-1 text-espresso">
-                      {PARSED_LINE_ITEMS.map((l) => (
+                      {lineItems.map((l) => (
                         <li key={`${l.branchId}-${l.sku}`}>
                           {l.name} × {l.qty} {l.unit} ·{" "}
                           {branchName(l.branchId)}
                         </li>
                       ))}
                     </ul>
-                    {step === "confirm" && (
+                    {ui.showLineItemsConfirm && step === "active" && (
                       <Button
                         size="sm"
                         className="mt-2 bg-espresso text-linen"
                         onClick={handleConfirm}
+                        disabled={loading}
                       >
                         <Check className="mr-1 size-4" />
                         Confirm &amp; send RFQ
@@ -205,45 +258,53 @@ export function RequestChat() {
                   </div>
                 )}
 
-                {msg.rich === "recommend" && step !== "done" && (
-                  <Button
-                    size="sm"
-                    className="mt-3 bg-terracotta text-linen hover:bg-terracotta/90"
-                    onClick={handleApprove}
-                  >
-                    Approve recommendation
-                  </Button>
-                )}
+                {msg.rich === "recommend" &&
+                  ui.showApproveButton &&
+                  step !== "done" && (
+                    <Button
+                      size="sm"
+                      className="mt-3 bg-terracotta text-linen hover:bg-terracotta/90"
+                      onClick={handleApprove}
+                      disabled={loading}
+                    >
+                      Approve recommendation
+                    </Button>
+                  )}
               </div>
             ))}
+            {loading && (
+              <div className="flex items-center gap-2 text-sm text-cocoa">
+                <Loader2 className="size-4 animate-spin" />
+                Mr.Bill is thinking…
+              </div>
+            )}
           </div>
         </ScrollArea>
 
         <div className="border-t border-oat p-4">
-          {step === "intake" && (
+          {step === "active" && (
             <div className="flex flex-col gap-3 sm:flex-row">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 className="min-h-[80px] border-oat bg-cream"
                 placeholder="Describe branch restock needs…"
+                disabled={loading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    handleSendIntake();
+                  }
+                }}
               />
               <Button
                 className="shrink-0 bg-espresso text-linen"
                 onClick={handleSendIntake}
+                disabled={loading || !input.trim()}
               >
                 <Send className="mr-1 size-4" />
                 Send
               </Button>
             </div>
-          )}
-          {step === "rfq" && (
-            <Button
-              className="w-full bg-espresso text-linen sm:w-auto"
-              onClick={handleParseQuotes}
-            >
-              Paste supplier replies (demo)
-            </Button>
           )}
           {step === "done" && (
             <div className="flex flex-wrap gap-2">
