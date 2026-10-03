@@ -10,6 +10,7 @@ import { recommend } from "@/lib/agent-tools";
 import { useAppState } from "@/lib/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasteQuoteReply } from "@/components/paste-quote-reply";
+import { RfqMailPanel } from "@/components/rfq-mail-panel";
 import { Check } from "lucide-react";
 
 export default function QuotesPage() {
@@ -64,6 +65,8 @@ export default function QuotesPage() {
           </div>
         )}
       </div>
+
+      <RfqMailPanel />
 
       <PasteQuoteReply />
 

@@ -51,6 +51,7 @@ export interface SendRfqEmailResult {
   messageId: string;
   inboxId: string;
   from: string;
+  threadId?: string;
 }
 
 export async function sendRfqEmail(
@@ -80,11 +81,16 @@ export async function sendRfqEmail(
   );
 
   const messageId = response.messageId ?? "unknown";
+  const threadId =
+    "threadId" in response && typeof response.threadId === "string"
+      ? response.threadId
+      : undefined;
 
   return {
     messageId,
     inboxId,
     from: inboxId,
+    threadId,
   };
 }
 

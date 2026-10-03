@@ -20,6 +20,7 @@ import { PARSED_LINE_ITEMS } from "@/lib/mock-data";
 import type { InventoryDelta } from "@/lib/agent-tools";
 import { runDemoAgent } from "@/lib/demo-agent";
 import { hasAgentMailConfig } from "@/lib/agentmail";
+import { summarizeRfqDeliveries } from "@/lib/rfq-email";
 
 const MAX_TOOL_ROUNDS = 8;
 
@@ -264,6 +265,8 @@ export async function POST(req: Request) {
         toolTrace: pipeline.toolTrace,
         ui: uiHintsFromSession(pipeline.session),
         mode: hasLiveLlmConfig() ? "live" : "demo",
+        ...summarizeRfqDeliveries(pipeline.session.rfqEmailDeliveries),
+        emailDeliveries: pipeline.session.rfqEmailDeliveries ?? [],
       });
     } catch (err) {
       console.error("confirmAction send_rfq failed:", err);
@@ -292,13 +295,17 @@ export async function POST(req: Request) {
         };
         try {
           const recovered = await runSendRfqConfirm(fallbackSession, inventory);
+          const recoveredMail = summarizeRfqDeliveries(
+            recovered.session.rfqEmailDeliveries,
+          );
           return NextResponse.json({
             assistantMessage: recovered.assistantMessage,
             session: recovered.session,
             toolTrace: recovered.toolTrace,
             ui: uiHintsFromSession(recovered.session),
             mode: "demo",
-            mailFallback: true,
+            ...recoveredMail,
+            emailDeliveries: recovered.session.rfqEmailDeliveries ?? [],
             mailFallbackReason:
               err instanceof Error ? err.message : "RFQ send failed",
           });
@@ -549,6 +556,8 @@ export async function POST(req: Request) {
       mode: "live",
       llmProvider: llmProviderUsed,
       llmRetriedFrom: llmRetriedFrom ?? undefined,
+      ...summarizeRfqDeliveries(session.rfqEmailDeliveries),
+      emailDeliveries: session.rfqEmailDeliveries ?? [],
     });
   } catch (err) {
     console.error("Agent LLM request failed:", err);

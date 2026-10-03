@@ -80,14 +80,16 @@ code=$(curl -s -o /tmp/mr-bill-suppliers.json -w "%{http_code}" -X POST "$BASE/a
   -H "Content-Type: application/json" \
   -d '{"lineItems":[{"sku":"OAT-1L","name":"Oat milk 1L","qty":48,"unit":"carton","branchId":"maadi"}]}')
 
-if [ "$code" = "200" ] && grep -q '"results"' /tmp/mr-bill-suppliers.json; then
-  if grep -q '"poweredBySerpApi":false' /tmp/mr-bill-suppliers.json; then
-    pass "POST /api/suppliers/search mock fallback (no SERPAPI_API_KEY)"
+if [ "$code" = "200" ] && grep -q '"results"' /tmp/mr-bill-suppliers.json && grep -q 'cairo-dairy' /tmp/mr-bill-suppliers.json; then
+  if grep -q '"source":"serpapi"' /tmp/mr-bill-suppliers.json || grep -q '"poweredBySerpApi":true' /tmp/mr-bill-suppliers.json; then
+    pass "POST /api/suppliers/search (HTTP 200, live source + catalog merge)"
+  elif grep -q '"source":"catalog"' /tmp/mr-bill-suppliers.json || grep -q '"poweredBySerpApi":false' /tmp/mr-bill-suppliers.json; then
+    pass "POST /api/suppliers/search catalog fallback (no live search key)"
   else
-    pass "POST /api/suppliers/search (HTTP 200, SerpAPI live)"
+    pass "POST /api/suppliers/search (HTTP 200, catalog rows present)"
   fi
 else
-  fail "POST /api/suppliers/search (expected HTTP 200 + results, got $code)"
+  fail "POST /api/suppliers/search (expected HTTP 200 + catalog ids, got $code)"
 fi
 
 expect_status "POST /api/agent invalid JSON" POST "/api/agent" "400" 'not json'
@@ -112,9 +114,24 @@ code=$(curl -s -o /tmp/mr-bill-rfq.json -w "%{http_code}" -X POST "$BASE/api/age
   -d "$SEND_RFQ_BODY")
 
 if [ "$code" = "200" ] && grep -q 'toolTrace' /tmp/mr-bill-rfq.json && grep -q 'send_rfq' /tmp/mr-bill-rfq.json && grep -q '"rfqId"' /tmp/mr-bill-rfq.json; then
-  pass "POST /api/agent confirmAction send_rfq (HTTP 200, pipeline + rfqId)"
+  if grep -q '"deliveryMode"' /tmp/mr-bill-rfq.json && grep -q '"emailDeliveries"' /tmp/mr-bill-rfq.json; then
+    pass "POST /api/agent confirmAction send_rfq (HTTP 200, pipeline + deliveryMode)"
+  else
+    pass "POST /api/agent confirmAction send_rfq (HTTP 200, pipeline + rfqId)"
+  fi
 else
   fail "POST /api/agent confirmAction send_rfq (expected HTTP 200 + toolTrace + rfqId, got $code)"
+fi
+
+expect_status "POST /api/agentmail/thread missing rfqId" POST "/api/agentmail/thread" "400" '{}'
+THREAD_BODY='{"rfqId":"RFQ-SMOKE","requestId":"req-smoke"}'
+code=$(curl -s -o /tmp/mr-bill-thread.json -w "%{http_code}" -X POST "$BASE/api/agentmail/thread" \
+  -H "Content-Type: application/json" \
+  -d "$THREAD_BODY")
+if [ "$code" = "200" ] && grep -q '"inbound"' /tmp/mr-bill-thread.json; then
+  pass "POST /api/agentmail/thread session-scoped (HTTP 200, inbound array)"
+else
+  fail "POST /api/agentmail/thread (expected HTTP 200 + inbound, got $code)"
 fi
 
 CONFIG=$(curl -s "$BASE/api/agent/config")

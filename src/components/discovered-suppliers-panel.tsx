@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DiscoveredSupplier } from "@/lib/serpapi";
 import { SUPPLIERS } from "@/lib/mock-data";
 import type { LineItem } from "@/lib/mock-data";
@@ -140,7 +140,18 @@ export function DiscoveredSuppliersPanel({
     [],
   );
 
-  const tableRows = discovered.length > 0 ? discovered : catalogRows;
+  const tableRows = useMemo(() => {
+    const seen = new Set(catalogRows.map((row) => row.name.toLowerCase()));
+    const extra = discovered.filter((row) => {
+      const key = row.name.toLowerCase();
+      if (row.source === "mock" || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return [...catalogRows, ...extra];
+  }, [catalogRows, discovered]);
+
+  const autoTriedRef = useRef(false);
 
   const toggleId = (id: string) => {
     onSelectedIdsChange(
@@ -197,6 +208,23 @@ export function DiscoveredSuppliersPanel({
     onSelectedIdsChange,
     selectedIds.length,
   ]);
+
+  useEffect(() => {
+    if (lineItems.filter((l) => l.name).length === 0) {
+      autoTriedRef.current = false;
+    }
+  }, [lineItems]);
+
+  useEffect(() => {
+    const ready = lineItems.filter((l) => l.name).length > 0;
+    if (!ready || disabled || autoTriedRef.current) return;
+    if (discovered.some((d) => d.source === "serpapi")) {
+      autoTriedRef.current = true;
+      return;
+    }
+    autoTriedRef.current = true;
+    void runSearch();
+  }, [disabled, discovered, lineItems, runSearch]);
 
   const footnotePowered =
     localPowered ?? poweredBySerpApi ?? discovered.some((d) => d.source === "serpapi");

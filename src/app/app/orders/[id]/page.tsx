@@ -26,8 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Check, FileText, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { DiscoveredSuppliersPanel } from "@/components/discovered-suppliers-panel";
+import { RfqMailPanel } from "@/components/rfq-mail-panel";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -44,8 +45,6 @@ export default function OrderDetailPage() {
 
   const { loading, callAgent, applyResponseSideEffects, apiError } =
     useAgentApi();
-  const [syncLoading, setSyncLoading] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
   const [discovered, setDiscovered] = useState(
     () => agentSession.discoveredSuppliers ?? [],
   );
@@ -104,47 +103,6 @@ export default function OrderDetailPage() {
   const title = isActive
     ? "Active restock - multi-branch"
     : (staticOrder?.title ?? "Order");
-
-  const rfqMessages = isActive ? agentSession.rfqMessages : undefined;
-  const rfqDeliveries = isActive ? agentSession.rfqEmailDeliveries : undefined;
-
-  const handleSyncReplies = useCallback(async () => {
-    setSyncLoading(true);
-    setSyncError(null);
-    try {
-      const res = await fetch("/api/agentmail/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session: agentSession,
-          inventory: inventorySnapshot,
-        }),
-      });
-      const data = (await res.json()) as {
-        error?: string;
-        session?: typeof agentSession;
-      };
-      if (!res.ok) {
-        setSyncError(data.error ?? "Sync failed");
-        return;
-      }
-      if (data.session) {
-        const s = data.session;
-        setAgentSession(s);
-        if (s.status === "approved") {
-          setRequestStatus("approved");
-        } else if (s.comparisonId || s.status === "quotes_ready") {
-          setRequestStatus("quotes_parsed");
-        } else if (s.rfqId || s.status === "rfq_sent") {
-          setRequestStatus("rfq_sent");
-        }
-      }
-    } catch {
-      setSyncError("Could not reach sync API");
-    } finally {
-      setSyncLoading(false);
-    }
-  }, [agentSession, inventorySnapshot, setAgentSession, setRequestStatus]);
 
   const persistSupplierSelection = useCallback(
     (ids: string[], rows: typeof discovered) => {
@@ -304,75 +262,7 @@ export default function OrderDetailPage() {
         />
       )}
 
-      {rfqMessages && rfqMessages.length > 0 && (
-        <Card className="border-stripe-border bg-linen card-shadow">
-          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
-                <FileText className="size-5 text-sage" />
-                Outbound RFQ messages
-              </CardTitle>
-              <p className="text-sm text-cocoa">
-                {rfqDeliveries?.some((d) => d.mode === "agentmail")
-                  ? "Sent from your quote inbox - delivery status and message IDs below."
-                  : "Practice RFQs (quote inbox not connected in this environment)."}
-              </p>
-            </div>
-            {isActive &&
-              rfqDeliveries?.some((d) => d.mode === "agentmail") && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-stripe-border"
-                  disabled={syncLoading}
-                  onClick={() => void handleSyncReplies()}
-                >
-                  {syncLoading ? (
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="mr-2 size-4" />
-                  )}
-                  Sync supplier replies
-                </Button>
-              )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {syncError && (
-              <p className="text-sm text-terracotta">{syncError}</p>
-            )}
-            {rfqMessages.map((msg) => {
-              const delivery = rfqDeliveries?.find(
-                (d) => d.supplierId === msg.supplierId,
-              );
-              return (
-                <div
-                  key={msg.supplierId}
-                  className="rounded-lg border border-stripe-border bg-cream"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stripe-border px-3 py-2">
-                    <p className="text-sm font-medium text-espresso">
-                      {supplierName(msg.supplierId)}
-                    </p>
-                    <span className="font-mono text-xs text-cocoa">
-                      {delivery?.mode === "agentmail"
-                        ? `Quote inbox · Sent · ${delivery.messageId}`
-                        : "EMAIL · OUT (simulated)"}
-                    </span>
-                  </div>
-                  {delivery?.mode === "agentmail" && (
-                    <p className="border-b border-stripe-border px-3 py-2 font-mono text-xs text-cocoa">
-                      From {delivery.from} → {delivery.to}
-                    </p>
-                  )}
-                  <pre className="max-h-48 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-cocoa">
-                    {msg.body}
-                  </pre>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
+      {isActive && <RfqMailPanel />}
 
       {showCompare && (
         <div className="space-y-3">

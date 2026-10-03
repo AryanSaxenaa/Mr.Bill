@@ -13,15 +13,16 @@ export interface DiscoveredSupplier {
 export interface SupplierSearchResult {
   results: DiscoveredSupplier[];
   poweredBySerpApi: boolean;
+  source: "serpapi" | "catalog";
   message?: string;
   query: string;
 }
 
 const SERPAPI_ENDPOINT = "https://serpapi.com/search.json";
-const MAX_RESULTS = 8;
+const MAX_WEB_RESULTS = 8;
 
 const DIRECTORY_JUNK =
-  /kompass|search companies|company directory|yellow.?pages|europages|industrystock|zoominfo|dnb\.com|thomasnet|alibaba\.com\/showroom/i;
+  /kompass|search companies|company directory|yellow.?pages|europages|industrystock|zoominfo|dnb\.com|thomasnet|alibaba|made-in-china|tradeindia|indiamart|21food|exporters on|from egypt suppliers|amazon\.|wikipedia|facebook\.com|instagram\.com|globalspec|youtube\.com|tiktok\.com|pinterest\.|reddit\.com/i;
 
 function isDirectoryJunk(row: {
   name: string;
@@ -29,6 +30,33 @@ function isDirectoryJunk(row: {
   snippet: string;
 }): boolean {
   return DIRECTORY_JUNK.test(`${row.name} ${row.url} ${row.snippet}`);
+}
+
+function isGoogleListingUrl(url: string): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes("google.")) return false;
+    return !parsed.pathname.includes("/maps");
+  } catch {
+    return /google\.[^/]+\/search/i.test(url);
+  }
+}
+
+function isUsableWebHit(row: {
+  name: string;
+  url: string;
+  snippet: string;
+  phone?: string;
+}): boolean {
+  if (isDirectoryJunk(row)) return false;
+  const url = row.url.trim();
+  if (isGoogleListingUrl(url) && !row.phone) return false;
+  if (isGoogleListingUrl(url) && row.phone) {
+    return true;
+  }
+  return Boolean(url || row.phone);
 }
 
 export function getSerpApiKey(): string | undefined {
@@ -49,11 +77,12 @@ export function buildSupplierSearchQuery(
       ? lineItems
           .slice(0, 3)
           .map((l) => l.name)
-          .join(", ")
-      : "food and beverage wholesale";
-  const categoryBit = category?.trim() ? `${category.trim()} ` : "wholesale ";
-  const locBit = location.includes("Cairo") ? "Cairo Egypt" : location;
-  return `${categoryBit}supplier ${itemPhrase} ${locBit}`.replace(/\s+/g, " ").trim();
+          .join(" ")
+      : "dairy coffee disposables";
+  const categoryBit = category?.trim() ? `${category.trim()} ` : "";
+  return `Cairo Egypt cafe restaurant F&B wholesale distributor ${categoryBit}${itemPhrase}`
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function slugId(name: string, index: number): string {
@@ -69,6 +98,7 @@ function mockCatalogResults(query: string): SupplierSearchResult {
   return {
     query,
     poweredBySerpApi: false,
+    source: "catalog",
     message:
       "Live search key is not set. Showing Maison Layla catalog suppliers for demo RFQ selection.",
     results: SUPPLIERS.map((s) => ({
@@ -78,7 +108,7 @@ function mockCatalogResults(query: string): SupplierSearchResult {
       snippet: `${s.name} - local Cairo F&B supplier (${s.contact}).`,
       source: "mock" as const,
       phone: undefined,
-    })).slice(0, MAX_RESULTS),
+    })).slice(0, 3),
   };
 }
 
@@ -109,15 +139,19 @@ function parseSerpPayload(
     snippet: string;
     phone?: string;
   }) => {
-    if (!row.name || out.length >= MAX_RESULTS) return;
-    if (isDirectoryJunk(row)) return;
+    if (!row.name || out.length >= MAX_WEB_RESULTS) return;
+    if (!isUsableWebHit(row)) return;
     const key = `${row.name}|${row.url}`;
     if (seen.has(key)) return;
     seen.add(key);
     out.push({
       id: slugId(row.name, out.length),
       name: row.name,
-      url: row.url || "https://google.com/search?q=" + encodeURIComponent(row.name),
+      url:
+        row.url ||
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${row.name} Cairo`,
+        )}`,
       snippet: row.snippet,
       phone: row.phone,
       source: "serpapi",
@@ -128,9 +162,13 @@ function parseSerpPayload(
   if (local?.places && Array.isArray(local.places)) {
     for (const place of local.places) {
       if (!place.title) continue;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${place.title} Cairo`,
+      )}`;
       push({
         name: place.title,
-        url: place.link ?? "",
+        url:
+          place.link && !isGoogleListingUrl(place.link) ? place.link : mapsUrl,
         snippet:
           [place.snippet, place.address].filter(Boolean).join(" · ") ||
           "Local supplier listing",
@@ -154,6 +192,21 @@ function parseSerpPayload(
   return out;
 }
 
+function mergeCatalogAndLive(
+  catalog: DiscoveredSupplier[],
+  live: DiscoveredSupplier[],
+): DiscoveredSupplier[] {
+  const seen = new Set(catalog.map((row) => row.name.toLowerCase()));
+  const web: DiscoveredSupplier[] = [];
+  for (const row of live) {
+    const key = row.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    web.push(row);
+  }
+  return [...catalog, ...web];
+}
+
 export async function searchSuppliers(options: {
   query?: string;
   location?: string;
@@ -175,7 +228,10 @@ export async function searchSuppliers(options: {
     q: query,
     location,
     api_key: apiKey,
-    num: String(MAX_RESULTS),
+    num: String(MAX_WEB_RESULTS),
+    hl: "en",
+    gl: "eg",
+    google_domain: "google.com.eg",
   });
 
   try {
@@ -190,27 +246,33 @@ export async function searchSuppliers(options: {
       console.error("SerpAPI HTTP error:", response.status, text.slice(0, 200));
       return {
         ...mockCatalogResults(query),
+        source: "catalog",
         message: `Live search request failed (HTTP ${response.status}). Using catalog suppliers.`,
       };
     }
 
     const data = (await response.json()) as Record<string, unknown>;
-    const results = parseSerpPayload(data, query).filter(
-      (row) => !isDirectoryJunk(row),
+    const live = parseSerpPayload(data, query).filter((row) =>
+      isUsableWebHit(row),
     );
+    const catalog = mockCatalogResults(query).results;
+    const results = mergeCatalogAndLive(catalog, live);
 
-    if (results.length === 0) {
+    if (live.length === 0) {
       return {
-        ...mockCatalogResults(query),
+        query,
         poweredBySerpApi: true,
+        source: "serpapi",
         message:
-          "Live search had no usable wholesalers (directory pages filtered). Using catalog suppliers.",
+          "Live search had no usable Cairo wholesalers after filtering directory pages. Catalog suppliers remain selectable.",
+        results,
       };
     }
 
     return {
       query,
       poweredBySerpApi: true,
+      source: "serpapi",
       results,
     };
   } catch (err) {
@@ -220,6 +282,7 @@ export async function searchSuppliers(options: {
     );
     return {
       ...mockCatalogResults(query),
+      source: "catalog",
       message: "Live search unreachable. Using catalog suppliers.",
     };
   }

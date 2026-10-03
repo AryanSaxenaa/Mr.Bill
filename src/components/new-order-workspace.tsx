@@ -429,9 +429,21 @@ export function NewOrderWorkspace() {
             <DiscoveredSuppliersPanel
               lineItems={lines.filter((l) => l.sku && l.name)}
               selectedIds={selectedSupplierIds}
-              onSelectedIdsChange={setSelectedSupplierIds}
+              onSelectedIdsChange={(ids) => {
+                setSelectedSupplierIds(ids);
+                setAgentSession({
+                  ...sessionWithForm(),
+                  selectedRfqSupplierIds: ids,
+                });
+              }}
               discovered={discovered}
-              onDiscoveredChange={setDiscovered}
+              onDiscoveredChange={(rows) => {
+                setDiscovered(rows);
+                setAgentSession({
+                  ...sessionWithForm(),
+                  discoveredSuppliers: rows,
+                });
+              }}
               disabled={Boolean(agentSession.rfqId)}
             />
           </div>

@@ -1,23 +1,35 @@
 import { sendRfqEmail, hasAgentMailConfig } from "./agentmail";
 import { SUPPLIERS, supplierName } from "./mock-data";
+import {
+  resolveSupplierDisplayName,
+  type DiscoveredSupplier,
+} from "./serpapi";
 
 export function resolveRfqRecipient(supplierId: string): string {
   const override = process.env.MRBILL_RFQ_TO_EMAIL?.trim();
   if (override) return override;
 
   const supplier = SUPPLIERS.find((s) => s.id === supplierId);
-  return supplier?.rfqEmail ?? supplier?.contact ?? `${supplierId}@example.com`;
+  if (supplier?.rfqEmail) return supplier.rfqEmail;
+  if (supplier?.contact) return supplier.contact;
+
+  const inbox = process.env.AGENTMAIL_INBOX_ID?.trim();
+  const slug = supplierId.replace(/[^a-z0-9]+/gi, "-").slice(0, 32) || "web";
+  if (inbox?.includes("@")) {
+    const [local, domain] = inbox.split("@");
+    if (local && domain) return `${local}+${slug}@${domain}`;
+  }
+  return `procurement-demo+${slug}@agentmail.to`;
 }
 
 export function buildRfqSubject(
   supplierId: string,
   rfqId: string,
   requestId: string,
+  discovered: DiscoveredSupplier[] = [],
 ): string {
-  const name = supplierName(supplierId);
-  const override = process.env.MRBILL_RFQ_TO_EMAIL?.trim();
-  const prefix = override ? `[Supplier: ${name}] ` : "";
-  return `${prefix}RFQ ${rfqId} · ${requestId} - Maison Layla`;
+  const name = resolveSupplierDisplayName(supplierId, discovered);
+  return `[Supplier: ${name}] RFQ ${rfqId} · ${requestId} - Maison Layla`;
 }
 
 export interface RfqEmailDelivery {
@@ -29,6 +41,25 @@ export interface RfqEmailDelivery {
   from: string;
   mode: "agentmail" | "simulated";
   error?: string;
+  threadId?: string;
+}
+
+export type RfqDeliveryMode = "agentmail" | "simulated" | "mixed";
+
+export function summarizeRfqDeliveries(
+  deliveries: RfqEmailDelivery[] | undefined,
+): {
+  deliveryMode: RfqDeliveryMode;
+  mailFallback: boolean;
+} {
+  const dels = deliveries ?? [];
+  const live = dels.filter((d) => d.mode === "agentmail").length;
+  const simulated = dels.filter((d) => d.mode === "simulated").length;
+  let deliveryMode: RfqDeliveryMode = "simulated";
+  if (dels.length > 0 && live === dels.length) deliveryMode = "agentmail";
+  else if (live > 0 && simulated > 0) deliveryMode = "mixed";
+  const mailFallback = hasAgentMailConfig() && simulated > 0;
+  return { deliveryMode, mailFallback };
 }
 
 function describeMailError(err: unknown): { name: string; message: string } {
@@ -56,12 +87,14 @@ export async function deliverRfqEmail(params: {
   rfqId: string;
   requestId: string;
   text: string;
+  discoveredSuppliers?: DiscoveredSupplier[];
 }): Promise<RfqEmailDelivery> {
   const to = resolveRfqRecipient(params.supplierId);
   const subject = buildRfqSubject(
     params.supplierId,
     params.rfqId,
     params.requestId,
+    params.discoveredSuppliers ?? [],
   );
 
   const simulated = (): RfqEmailDelivery => ({
@@ -94,6 +127,7 @@ export async function deliverRfqEmail(params: {
       inboxId: sent.inboxId,
       from: sent.from,
       mode: "agentmail",
+      threadId: sent.threadId,
     };
   } catch (err) {
     const { name, message } = describeMailError(err);
@@ -109,3 +143,5 @@ export async function deliverRfqEmail(params: {
     };
   }
 }
+
+export { supplierName };

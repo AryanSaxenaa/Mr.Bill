@@ -8,6 +8,7 @@ import {
 import type { InventoryDelta } from "./agent-tools";
 import { PARSED_LINE_ITEMS, branchName } from "./mock-data";
 import { hasAgentMailConfig } from "./agentmail";
+import { summarizeRfqDeliveries, type RfqDeliveryMode, type RfqEmailDelivery } from "./rfq-email";
 
 interface ChatTurn {
   role: "user" | "assistant";
@@ -29,6 +30,9 @@ export interface DemoAgentResponse {
   inventoryDeltas?: InventoryDelta[];
   ui: AgentUiHints;
   mode: "demo";
+  deliveryMode?: RfqDeliveryMode;
+  mailFallback?: boolean;
+  emailDeliveries?: RfqEmailDelivery[];
 }
 
 function intakeHeuristic(message: string, session: AgentSession): AgentSession {
@@ -112,6 +116,11 @@ async function runConfirmPipeline(
   next = s1;
   toolTrace.push({ name: result.name, summary: result.summary });
 
+  const deliveryFields = {
+    ...summarizeRfqDeliveries(next.rfqEmailDeliveries),
+    emailDeliveries: next.rfqEmailDeliveries ?? [],
+  };
+
   if (next.quoteIds.length < 2) {
     const waiting = hasAgentMailConfig()
       ? "RFQs are out from your quote inbox. Open the order and sync supplier replies when quotes arrive."
@@ -122,6 +131,7 @@ async function runConfirmPipeline(
       toolTrace,
       ui: uiHintsFromSession(next),
       mode: "demo",
+      ...deliveryFields,
     };
   }
 
@@ -155,6 +165,8 @@ async function runConfirmPipeline(
     toolTrace,
     ui: uiHintsFromSession(next),
     mode: "demo",
+    ...summarizeRfqDeliveries(next.rfqEmailDeliveries),
+    emailDeliveries: next.rfqEmailDeliveries ?? [],
   };
 }
 

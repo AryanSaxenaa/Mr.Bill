@@ -20,7 +20,13 @@ import {
 } from "./mock-data";
 import type { AgentSession } from "./agent-session";
 import { hasAgentMailConfig } from "./agentmail";
-import { deliverRfqEmail, type RfqEmailDelivery } from "./rfq-email";
+import {
+  buildRfqSubject,
+  deliverRfqEmail,
+  resolveRfqRecipient,
+  summarizeRfqDeliveries,
+  type RfqEmailDelivery,
+} from "./rfq-email";
 
 export type ToolName =
   | "find_suppliers"
@@ -204,14 +210,20 @@ export async function executeAgentTool(
             rfqId: output.rfqId,
             requestId,
             text: msg.body,
+            discoveredSuppliers: next.discoveredSuppliers,
           });
           emailDeliveries.push(delivery);
         } catch (err) {
           console.error("RFQ delivery threw:", err);
           emailDeliveries.push({
             supplierId: msg.supplierId,
-            to: "simulated",
-            subject: `RFQ ${output.rfqId}`,
+            to: resolveRfqRecipient(msg.supplierId),
+            subject: buildRfqSubject(
+              msg.supplierId,
+              output.rfqId,
+              requestId,
+              next.discoveredSuppliers,
+            ),
             messageId: `sim-${output.rfqId}-${msg.supplierId}`,
             inboxId: "simulated",
             from: "procurement@mrbill.local",
@@ -236,10 +248,8 @@ export async function executeAgentTool(
         supplierIds,
       );
 
-      const mailFallback =
-        agentMailEnabled &&
-        emailDeliveries.some((d) => d.mode === "simulated");
-      const deliveryNote = mailFallback
+      const deliverySummary = summarizeRfqDeliveries(emailDeliveries);
+      const deliveryNote = deliverySummary.mailFallback
         ? "Quote inbox send did not complete; simulated Cairo Dairy and Bean & Barrel quotes are attached so you can compare."
         : agentMailEnabled
           ? "Quote inbox send recorded. Catalog quotes are attached so you can compare without waiting on replies."
@@ -250,7 +260,11 @@ export async function executeAgentTool(
         result: {
           name,
           input: args,
-          output: { ...output, autoParsed, mailFallback },
+          output: {
+            ...output,
+            autoParsed,
+            ...deliverySummary,
+          },
           summary: `RFQ ${output.rfqId} sent to ${supplierIds.join(", ")}. ${deliveryNote}`,
         },
       };

@@ -20,6 +20,7 @@ export interface AgentApiSuccess {
   llmProvider?: string;
   mailFallback?: boolean;
   mailFallbackReason?: string;
+  deliveryMode?: "agentmail" | "simulated" | "mixed";
 }
 
 interface InventorySnapshotRow {

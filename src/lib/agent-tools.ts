@@ -47,8 +47,12 @@ export interface SendRfqOutput {
     inboxId: string;
     from: string;
     mode: "agentmail" | "simulated";
+    threadId?: string;
+    error?: string;
   }[];
   agentMailEnabled?: boolean;
+  deliveryMode?: "agentmail" | "simulated" | "mixed";
+  mailFallback?: boolean;
 }
 
 export interface ParseQuoteReplyInput {
