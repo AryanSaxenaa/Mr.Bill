@@ -40,15 +40,15 @@ export default function LandingPage() {
       <main className="relative z-10 mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-8 lg:grid-cols-2 lg:items-center lg:pt-16">
         <div className="page-enter space-y-6">
           <p className="text-sm font-medium uppercase tracking-wide text-sage">
-            Agents at Work · F&B procurement
+            Agents at Work · Open-source F&B procurement
           </p>
           <h1 className="font-display text-4xl font-bold leading-tight text-espresso md:text-[2.25rem] lg:text-5xl">
             Procurement on autopilot for F&B.
           </h1>
           <p className="max-w-lg text-lg text-cocoa">
-            Layla runs three specialty cafés across Cairo. Mr.Bill turns a
-            WhatsApp-style restock note into RFQs, side-by-side quotes, and
-            branch inventory updates — no freight rails, no payment complexity.
+            Layla runs three specialty cafés across Cairo. Mr.Bill is an
+            open-source agent loop — intake, RFQ, compare, decide, update
+            records — without freight rails or payment complexity.
           </p>
           <ul className="space-y-2 text-cocoa">
             <li className="flex items-start gap-2">
@@ -82,10 +82,12 @@ export default function LandingPage() {
               <ArrowRight className="ml-1 size-4" />
             </Link>
             <Link
-              href="/app/dashboard"
+              href="https://github.com/AryanSaxenaa/Mr.Bill"
               className={cn(buttonVariants({ variant: "outline" }), "border-oat")}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              View dashboard
+              View on GitHub
             </Link>
           </div>
         </div>
@@ -103,7 +105,18 @@ export default function LandingPage() {
       </main>
 
       <footer className="relative z-10 border-t border-oat py-8 text-center text-sm text-cocoa">
-        MIT licensed · Open source · Built for hospitality operators
+        <p>
+          MIT licensed ·{" "}
+          <Link
+            href="https://github.com/AryanSaxenaa/Mr.Bill"
+            className="text-terracotta underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open source on GitHub
+          </Link>{" "}
+          · Built for hospitality operators
+        </p>
       </footer>
     </div>
   );

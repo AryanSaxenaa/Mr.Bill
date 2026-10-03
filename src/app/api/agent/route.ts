@@ -13,6 +13,7 @@ import {
 } from "@/lib/agent-session";
 import { PARSED_LINE_ITEMS } from "@/lib/mock-data";
 import type { InventoryDelta } from "@/lib/agent-tools";
+import { runDemoAgent } from "@/lib/demo-agent";
 
 const MAX_TOOL_ROUNDS = 8;
 
@@ -61,18 +62,6 @@ function isConfirmMessage(message: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        error:
-          "OPENAI_API_KEY is not set. Add it to .env.local (see README) to run the live agent.",
-        code: "MISSING_API_KEY",
-      },
-      { status: 503 },
-    );
-  }
-
   let body: AgentRequestBody;
   try {
     body = (await req.json()) as AgentRequestBody;
@@ -83,6 +72,18 @@ export async function POST(req: Request) {
   const message = body.message?.trim();
   if (!message && !body.confirmAction) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    const demo = runDemoAgent({
+      message: message ?? "",
+      history: body.history,
+      session: body.session,
+      inventory: body.inventory,
+      confirmAction: body.confirmAction,
+    });
+    return NextResponse.json(demo);
   }
 
   let session: AgentSession = body.session ?? { ...DEFAULT_SESSION };
@@ -140,6 +141,7 @@ export async function POST(req: Request) {
       session,
       toolTrace,
       ui: uiHintsFromSession(session),
+      mode: "live",
     });
   }
 
@@ -165,6 +167,7 @@ export async function POST(req: Request) {
       toolTrace,
       inventoryDeltas,
       ui: uiHintsFromSession(session),
+      mode: "live",
     });
   }
 
@@ -351,5 +354,6 @@ export async function POST(req: Request) {
     toolTrace,
     inventoryDeltas,
     ui: uiHintsFromSession(session),
+    mode: "live",
   });
 }

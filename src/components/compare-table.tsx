@@ -12,14 +12,29 @@ import { compareQuotes, ACTIVE_REQUEST_ID } from "@/lib/agent-tools";
 import { MOCK_QUOTES, supplierName } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useAppState } from "@/lib/app-state";
 
 export function CompareTable({ highlightBest = true }: { highlightBest?: boolean }) {
+  const { agentSession } = useAppState();
+
+  const quoteIds =
+    agentSession.quoteIds.length >= 2
+      ? agentSession.quoteIds
+      : MOCK_QUOTES.map((q) => q.id);
+
+  const requestId = agentSession.requestId || ACTIVE_REQUEST_ID;
+
   const comparison = compareQuotes({
-    requestId: ACTIVE_REQUEST_ID,
-    quoteIds: MOCK_QUOTES.map((q) => q.id),
+    requestId,
+    quoteIds,
   });
 
-  const supplierIds = MOCK_QUOTES.map((q) => q.supplierId);
+  const supplierIds = quoteIds
+    .map((id) => MOCK_QUOTES.find((q) => q.id === id)?.supplierId)
+    .filter((id): id is string => Boolean(id));
+
+  const displaySuppliers =
+    supplierIds.length > 0 ? supplierIds : MOCK_QUOTES.map((q) => q.supplierId);
 
   return (
     <div className="overflow-x-auto rounded-xl border border-oat bg-linen">
@@ -27,7 +42,7 @@ export function CompareTable({ highlightBest = true }: { highlightBest?: boolean
         <TableHeader>
           <TableRow className="border-oat hover:bg-transparent">
             <TableHead className="text-espresso">Line item</TableHead>
-            {supplierIds.map((id) => (
+            {displaySuppliers.map((id) => (
               <TableHead key={id} className="text-espresso">
                 {supplierName(id)}
               </TableHead>

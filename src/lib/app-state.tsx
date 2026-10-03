@@ -17,17 +17,30 @@ import {
   type InventoryRow,
 } from "./mock-data";
 import type { InventoryDelta } from "./agent-tools";
+import { DEFAULT_SESSION, type AgentSession } from "./agent-session";
 
 const INVENTORY_KEY = "mrbill-inventory-v1";
 const AUDIT_KEY = "mrbill-audit-v1";
+const SESSION_KEY = "mrbill-session-v1";
+const REQUEST_STATUS_KEY = "mrbill-request-status-v1";
+
+export type RequestFlowStatus =
+  | "idle"
+  | "confirmed"
+  | "rfq_sent"
+  | "quotes_parsed"
+  | "approved";
 
 interface AppStateValue {
   branchFilter: BranchId | "all";
   setBranchFilter: (b: BranchId | "all") => void;
   inventory: InventoryRow[];
   audit: AuditEntry[];
-  requestStatus: "idle" | "confirmed" | "rfq_sent" | "quotes_parsed" | "approved";
-  setRequestStatus: (s: AppStateValue["requestStatus"]) => void;
+  agentSession: AgentSession;
+  setAgentSession: (s: AgentSession) => void;
+  resetAgentSession: () => void;
+  requestStatus: RequestFlowStatus;
+  setRequestStatus: (s: RequestFlowStatus) => void;
   applyInventoryApproval: (approvedBy: string) => void;
   applyInventoryDeltas: (deltas: InventoryDelta[], approvedBy: string) => void;
 }
@@ -45,17 +58,33 @@ function loadJson<T>(key: string, fallback: T): T {
   }
 }
 
+function sessionFromStatus(status: RequestFlowStatus, session: AgentSession): AgentSession {
+  if (status === "approved") {
+    return { ...session, status: "approved" };
+  }
+  return session;
+}
+
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [branchFilter, setBranchFilter] = useState<BranchId | "all">("all");
   const [inventory, setInventory] = useState<InventoryRow[]>(INITIAL_INVENTORY);
   const [audit, setAudit] = useState<AuditEntry[]>(INITIAL_AUDIT);
-  const [requestStatus, setRequestStatus] =
-    useState<AppStateValue["requestStatus"]>("idle");
+  const [agentSession, setAgentSessionState] =
+    useState<AgentSession>(DEFAULT_SESSION);
+  const [requestStatus, setRequestStatusState] =
+    useState<RequestFlowStatus>("idle");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setInventory(loadJson(INVENTORY_KEY, INITIAL_INVENTORY));
     setAudit(loadJson(AUDIT_KEY, INITIAL_AUDIT));
+    const savedStatus = loadJson<RequestFlowStatus>(
+      REQUEST_STATUS_KEY,
+      "idle",
+    );
+    setRequestStatusState(savedStatus);
+    const savedSession = loadJson<AgentSession>(SESSION_KEY, DEFAULT_SESSION);
+    setAgentSessionState(sessionFromStatus(savedStatus, savedSession));
     setHydrated(true);
   }, []);
 
@@ -68,6 +97,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     localStorage.setItem(AUDIT_KEY, JSON.stringify(audit));
   }, [audit, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(agentSession));
+  }, [agentSession, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(REQUEST_STATUS_KEY, JSON.stringify(requestStatus));
+  }, [requestStatus, hydrated]);
+
+  const setAgentSession = useCallback((s: AgentSession) => {
+    setAgentSessionState(s);
+  }, []);
+
+  const resetAgentSession = useCallback(() => {
+    setAgentSessionState({ ...DEFAULT_SESSION });
+    setRequestStatusState("idle");
+  }, []);
+
+  const setRequestStatus = useCallback((s: RequestFlowStatus) => {
+    setRequestStatusState(s);
+  }, []);
 
   const applyInventoryDeltas = useCallback(
     (deltas: InventoryDelta[], approvedBy: string) => {
@@ -89,7 +141,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           approvedBy,
         },
       ]);
-      setRequestStatus("approved");
+      setRequestStatusState("approved");
     },
     [],
   );
@@ -135,6 +187,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setBranchFilter,
       inventory,
       audit,
+      agentSession,
+      setAgentSession,
+      resetAgentSession,
       requestStatus,
       setRequestStatus,
       applyInventoryApproval,
@@ -144,7 +199,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       branchFilter,
       inventory,
       audit,
+      agentSession,
+      setAgentSession,
+      resetAgentSession,
       requestStatus,
+      setRequestStatus,
       applyInventoryApproval,
       applyInventoryDeltas,
     ],
