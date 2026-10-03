@@ -19,6 +19,16 @@ export interface SendRfqOutput {
   rfqId: string;
   messages: { supplierId: string; body: string }[];
   sentAt: string;
+  emailDeliveries?: {
+    supplierId: string;
+    to: string;
+    subject: string;
+    messageId: string;
+    inboxId: string;
+    from: string;
+    mode: "agentmail" | "simulated";
+  }[];
+  agentMailEnabled?: boolean;
 }
 
 export interface ParseQuoteReplyInput {

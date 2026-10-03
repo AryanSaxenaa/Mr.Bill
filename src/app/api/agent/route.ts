@@ -19,6 +19,7 @@ import {
 import { PARSED_LINE_ITEMS } from "@/lib/mock-data";
 import type { InventoryDelta } from "@/lib/agent-tools";
 import { runDemoAgent } from "@/lib/demo-agent";
+import { hasAgentMailConfig } from "@/lib/agentmail";
 
 const MAX_TOOL_ROUNDS = 8;
 
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
     const supplierId = body.parseQuote.supplierId || "cairo-dairy";
     const rawText = body.parseQuote.rawText.trim();
 
-    const { session: s1, result: parsed } = executeAgentTool(
+    const { session: s1, result: parsed } = await executeAgentTool(
       "parse_quote_reply",
       {
         rfq_id: session.rfqId,
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
     toolTrace.push({ name: parsed.name, summary: parsed.summary });
 
     if (session.quoteIds.length >= 2) {
-      const { session: s2, result: cmp } = executeAgentTool(
+      const { session: s2, result: cmp } = await executeAgentTool(
         "compare_quotes",
         {
           request_id: session.requestId,
@@ -113,7 +114,7 @@ export async function POST(req: Request) {
       session = s2;
       toolTrace.push({ name: cmp.name, summary: cmp.summary });
 
-      const { session: s3, result: rec } = executeAgentTool(
+      const { session: s3, result: rec } = await executeAgentTool(
         "recommend",
         {
           request_id: session.requestId,
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
   }
 
   if (!hasLiveLlmConfig()) {
-    const demo = runDemoAgent({
+    const demo = await runDemoAgent({
       message: message ?? "",
       history: body.history,
       session: body.session,
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
       lineItems:
         session.lineItems.length > 0 ? session.lineItems : PARSED_LINE_ITEMS,
     };
-    const { session: s1, result } = executeAgentTool(
+    const { session: s1, result } = await executeAgentTool(
       "send_rfq",
       {
         request_id: session.requestId,
@@ -180,32 +181,47 @@ export async function POST(req: Request) {
     session = s1;
     toolTrace.push({ name: result.name, summary: result.summary });
 
-    const { session: s2, result: cmp } = executeAgentTool(
-      "compare_quotes",
-      {
-        request_id: session.requestId,
-        quote_ids: session.quoteIds,
-      },
-      session,
-      inventory,
-    );
-    session = s2;
-    toolTrace.push({ name: cmp.name, summary: cmp.summary });
+    if (session.quoteIds.length >= 2) {
+      const { session: s2, result: cmp } = await executeAgentTool(
+        "compare_quotes",
+        {
+          request_id: session.requestId,
+          quote_ids: session.quoteIds,
+        },
+        session,
+        inventory,
+      );
+      session = s2;
+      toolTrace.push({ name: cmp.name, summary: cmp.summary });
 
-    const { session: s3, result: rec } = executeAgentTool(
-      "recommend",
-      {
-        request_id: session.requestId,
-        comparison_id: session.comparisonId,
-      },
-      session,
-      inventory,
-    );
-    session = s3;
-    toolTrace.push({ name: rec.name, summary: rec.summary });
+      const { session: s3, result: rec } = await executeAgentTool(
+        "recommend",
+        {
+          request_id: session.requestId,
+          comparison_id: session.comparisonId,
+        },
+        session,
+        inventory,
+      );
+      session = s3;
+      toolTrace.push({ name: rec.name, summary: rec.summary });
+
+      return NextResponse.json({
+        assistantMessage: `${rec.summary}\n\nSide-by-side comparison is ready below.`,
+        session,
+        toolTrace,
+        ui: uiHintsFromSession(session),
+        mode: "live",
+      });
+    }
+
+    const waiting =
+      hasAgentMailConfig()
+        ? "RFQs sent via AgentMail. Use Sync supplier replies on the order when suppliers respond."
+        : "Waiting for supplier quotes.";
 
     return NextResponse.json({
-      assistantMessage: `${rec.summary}\n\nSide-by-side comparison is ready below.`,
+      assistantMessage: `${result.summary}\n\n${waiting}`,
       session,
       toolTrace,
       ui: uiHintsFromSession(session),
@@ -214,7 +230,7 @@ export async function POST(req: Request) {
   }
 
   if (body.confirmAction === "approve") {
-    const { session: s1, result } = executeAgentTool(
+    const { session: s1, result } = await executeAgentTool(
       "update_inventory",
       {
         request_id: session.requestId,
@@ -247,7 +263,7 @@ export async function POST(req: Request) {
     resolveLlmProvider();
   } catch (err) {
     console.error("Agent LLM client setup failed:", err);
-    const demo = runDemoAgent({
+    const demo = await runDemoAgent({
       message: message ?? "",
       history: body.history,
       session: body.session,
@@ -354,7 +370,7 @@ export async function POST(req: Request) {
           continue;
         }
 
-        const { session: newSession, result } = executeAgentTool(
+        const { session: newSession, result } = await executeAgentTool(
           name,
           parsedArgs,
           session,
@@ -396,7 +412,7 @@ export async function POST(req: Request) {
       session.status === "awaiting_confirm" &&
       isConfirmMessage(message ?? "")
     ) {
-      const { session: s1, result } = executeAgentTool(
+      const { session: s1, result } = await executeAgentTool(
         "send_rfq",
         {
           request_id: session.requestId,
@@ -411,27 +427,32 @@ export async function POST(req: Request) {
       session = s1;
       toolTrace.push({ name: result.name, summary: result.summary });
 
-      const { session: s2, result: cmp } = executeAgentTool(
-        "compare_quotes",
-        { request_id: session.requestId, quote_ids: session.quoteIds },
-        session,
-        inventory,
-      );
-      session = s2;
-      toolTrace.push({ name: cmp.name, summary: cmp.summary });
+      if (session.quoteIds.length >= 2) {
+        const { session: s2, result: cmp } = await executeAgentTool(
+          "compare_quotes",
+          { request_id: session.requestId, quote_ids: session.quoteIds },
+          session,
+          inventory,
+        );
+        session = s2;
+        toolTrace.push({ name: cmp.name, summary: cmp.summary });
 
-      const { session: s3, result: rec } = executeAgentTool(
-        "recommend",
-        {
-          request_id: session.requestId,
-          comparison_id: session.comparisonId,
-        },
-        session,
-        inventory,
-      );
-      session = s3;
-      toolTrace.push({ name: rec.name, summary: rec.summary });
-      assistantText = `${assistantText}\n\n${rec.summary}`.trim();
+        const { session: s3, result: rec } = await executeAgentTool(
+          "recommend",
+          {
+            request_id: session.requestId,
+            comparison_id: session.comparisonId,
+          },
+          session,
+          inventory,
+        );
+        session = s3;
+        toolTrace.push({ name: rec.name, summary: rec.summary });
+        assistantText = `${assistantText}\n\n${rec.summary}`.trim();
+      } else if (hasAgentMailConfig()) {
+        assistantText =
+          `${assistantText}\n\nRFQs sent via AgentMail — sync supplier replies on the order desk.`.trim();
+      }
     }
 
     return NextResponse.json({
@@ -449,7 +470,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("Agent LLM request failed:", err);
-    const demo = runDemoAgent({
+    const demo = await runDemoAgent({
       message: message ?? "",
       history: body.history,
       session: body.session,

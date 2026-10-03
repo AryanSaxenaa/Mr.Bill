@@ -11,6 +11,8 @@ export interface Supplier {
   name: string;
   local: boolean;
   contact: string;
+  /** AgentMail RFQ destination when MRBILL_RFQ_TO_EMAIL is unset */
+  rfqEmail: string;
 }
 
 export interface LineItem {
@@ -70,18 +72,21 @@ export const SUPPLIERS: Supplier[] = [
     name: "Cairo Dairy Co.",
     local: true,
     contact: "orders@cairodairy.example",
+    rfqEmail: "procurement-demo+cairo-dairy@agentmail.to",
   },
   {
     id: "bean-barrel",
     name: "Bean & Barrel",
     local: true,
     contact: "wholesale@beanbarrel.example",
+    rfqEmail: "procurement-demo+bean-barrel@agentmail.to",
   },
   {
     id: "nile-disposables",
     name: "Nile Disposables",
     local: true,
     contact: "sales@niledisp.example",
+    rfqEmail: "procurement-demo+nile-disposables@agentmail.to",
   },
 ];
 

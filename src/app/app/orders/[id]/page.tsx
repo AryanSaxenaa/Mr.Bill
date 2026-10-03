@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Check, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, FileText, Loader2, RefreshCw } from "lucide-react";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -43,6 +43,8 @@ export default function OrderDetailPage() {
 
   const { loading, callAgent, applyResponseSideEffects, apiError } =
     useAgentApi();
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const isActive = orderId === (agentSession.requestId || ACTIVE_ORDER_ID);
   const staticOrder = DEMO_ORDERS.find((o) => o.id === orderId);
@@ -104,6 +106,45 @@ export default function OrderDetailPage() {
     : (staticOrder?.title ?? "Order");
 
   const rfqMessages = isActive ? agentSession.rfqMessages : undefined;
+  const rfqDeliveries = isActive ? agentSession.rfqEmailDeliveries : undefined;
+
+  const handleSyncReplies = useCallback(async () => {
+    setSyncLoading(true);
+    setSyncError(null);
+    try {
+      const res = await fetch("/api/agentmail/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session: agentSession,
+          inventory: inventorySnapshot,
+        }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        session?: typeof agentSession;
+      };
+      if (!res.ok) {
+        setSyncError(data.error ?? "Sync failed");
+        return;
+      }
+      if (data.session) {
+        const s = data.session;
+        setAgentSession(s);
+        if (s.status === "approved") {
+          setRequestStatus("approved");
+        } else if (s.comparisonId || s.status === "quotes_ready") {
+          setRequestStatus("quotes_parsed");
+        } else if (s.rfqId || s.status === "rfq_sent") {
+          setRequestStatus("rfq_sent");
+        }
+      }
+    } catch {
+      setSyncError("Could not reach sync API");
+    } finally {
+      setSyncLoading(false);
+    }
+  }, [agentSession, inventorySnapshot, setAgentSession, setRequestStatus]);
   const showCompare =
     isActive &&
     agentSession.quoteIds.length >= 2 &&
@@ -216,32 +257,70 @@ export default function OrderDetailPage() {
 
       {rfqMessages && rfqMessages.length > 0 && (
         <Card className="border-oat bg-linen card-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
-              <FileText className="size-5 text-sage" />
-              Outbound RFQ messages
-            </CardTitle>
-            <p className="text-sm text-cocoa">
-              Simulated supplier emails from send_rfq — not chat bubbles.
-            </p>
+          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 font-display text-lg text-espresso">
+                <FileText className="size-5 text-sage" />
+                Outbound RFQ messages
+              </CardTitle>
+              <p className="text-sm text-cocoa">
+                {rfqDeliveries?.some((d) => d.mode === "agentmail")
+                  ? "Sent via AgentMail — status and message ids below."
+                  : "Simulated supplier emails from send_rfq (no AgentMail key)."}
+              </p>
+            </div>
+            {isActive &&
+              rfqDeliveries?.some((d) => d.mode === "agentmail") && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-oat"
+                  disabled={syncLoading}
+                  onClick={() => void handleSyncReplies()}
+                >
+                  {syncLoading ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 size-4" />
+                  )}
+                  Sync supplier replies
+                </Button>
+              )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {rfqMessages.map((msg) => (
-              <div
-                key={msg.supplierId}
-                className="rounded-lg border border-oat bg-cream"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-oat px-3 py-2">
-                  <p className="text-sm font-medium text-espresso">
-                    {supplierName(msg.supplierId)}
-                  </p>
-                  <span className="font-mono text-xs text-cocoa">EMAIL · OUT</span>
+            {syncError && (
+              <p className="text-sm text-terracotta">{syncError}</p>
+            )}
+            {rfqMessages.map((msg) => {
+              const delivery = rfqDeliveries?.find(
+                (d) => d.supplierId === msg.supplierId,
+              );
+              return (
+                <div
+                  key={msg.supplierId}
+                  className="rounded-lg border border-oat bg-cream"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-oat px-3 py-2">
+                    <p className="text-sm font-medium text-espresso">
+                      {supplierName(msg.supplierId)}
+                    </p>
+                    <span className="font-mono text-xs text-cocoa">
+                      {delivery?.mode === "agentmail"
+                        ? `AgentMail · Sent · ${delivery.messageId}`
+                        : "EMAIL · OUT (simulated)"}
+                    </span>
+                  </div>
+                  {delivery?.mode === "agentmail" && (
+                    <p className="border-b border-oat px-3 py-2 font-mono text-xs text-cocoa">
+                      From {delivery.from} → {delivery.to}
+                    </p>
+                  )}
+                  <pre className="max-h-48 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-cocoa">
+                    {msg.body}
+                  </pre>
                 </div>
-                <pre className="max-h-48 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-cocoa">
-                  {msg.body}
-                </pre>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}

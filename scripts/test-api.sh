@@ -71,6 +71,8 @@ else
 fi
 
 expect_status "GET /api/agent/config" GET "/api/agent/config" "200"
+expect_status "GET /api/agentmail/inbox" GET "/api/agentmail/inbox" "200"
+expect_status "POST /api/webhooks/agentmail" POST "/api/webhooks/agentmail" "200" '{"event_type":"message.received","message":{"message_id":"smoke-test-msg","inbox_id":"smoke-inbox","subject":"[Supplier: Cairo Dairy Co.] RFQ RFQ-2026-0042","text":"Oat milk 1L: EGP 42.50/carton"}}'
 
 expect_status "POST /api/agent invalid JSON" POST "/api/agent" "400" 'not json'
 expect_status "POST /api/agent missing message" POST "/api/agent" "400" '{}'

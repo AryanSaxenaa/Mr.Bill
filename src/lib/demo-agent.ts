@@ -7,6 +7,7 @@ import {
 } from "./agent-session";
 import type { InventoryDelta } from "./agent-tools";
 import { PARSED_LINE_ITEMS, branchName } from "./mock-data";
+import { hasAgentMailConfig } from "./agentmail";
 
 interface ChatTurn {
   role: "user" | "assistant";
@@ -57,13 +58,16 @@ function formatLineItemsConfirm(session: AgentSession): string {
         `• ${l.name} × ${l.qty} ${l.unit} · ${branchName(l.branchId)}`,
     )
     .join("\n");
-  return `Here’s what I heard for ${session.requestId} (needed by ${session.neededBy}, delivery focus ${session.deliveryBranch}):\n\n${lines}\n\nConfirm when this looks right — I’ll RFQ Cairo Dairy Co. and Bean & Barrel with mock replies for the demo.`;
+  const rfqNote = hasAgentMailConfig()
+    ? "I’ll send real RFQs via AgentMail when you confirm."
+    : "I’ll RFQ Cairo Dairy Co. and Bean & Barrel with mock replies for the demo.";
+  return `Here’s what I heard for ${session.requestId} (needed by ${session.neededBy}, delivery focus ${session.deliveryBranch}):\n\n${lines}\n\nConfirm when this looks right — ${rfqNote}`;
 }
 
-function runConfirmPipeline(
+async function runConfirmPipeline(
   session: AgentSession,
   inventory: { branchId: string; sku: string; qty: number }[],
-): DemoAgentResponse {
+): Promise<DemoAgentResponse> {
   const toolTrace: { name: string; summary: string }[] = [];
   let next = {
     ...session,
@@ -71,7 +75,7 @@ function runConfirmPipeline(
       session.lineItems.length > 0 ? session.lineItems : PARSED_LINE_ITEMS,
   };
 
-  const { session: s1, result } = executeAgentTool(
+  const { session: s1, result } = await executeAgentTool(
     "send_rfq",
     {
       request_id: next.requestId,
@@ -86,7 +90,20 @@ function runConfirmPipeline(
   next = s1;
   toolTrace.push({ name: result.name, summary: result.summary });
 
-  const { session: s2, result: cmp } = executeAgentTool(
+  if (next.quoteIds.length < 2) {
+    const waiting = hasAgentMailConfig()
+      ? "RFQs sent via AgentMail. Open the order and use Sync supplier replies when quotes arrive."
+      : result.summary;
+    return {
+      assistantMessage: waiting,
+      session: next,
+      toolTrace,
+      ui: uiHintsFromSession(next),
+      mode: "demo",
+    };
+  }
+
+  const { session: s2, result: cmp } = await executeAgentTool(
     "compare_quotes",
     {
       request_id: next.requestId,
@@ -98,7 +115,7 @@ function runConfirmPipeline(
   next = s2;
   toolTrace.push({ name: cmp.name, summary: cmp.summary });
 
-  const { session: s3, result: rec } = executeAgentTool(
+  const { session: s3, result: rec } = await executeAgentTool(
     "recommend",
     {
       request_id: next.requestId,
@@ -119,7 +136,9 @@ function runConfirmPipeline(
   };
 }
 
-export function runDemoAgent(body: DemoAgentRequest): DemoAgentResponse {
+export async function runDemoAgent(
+  body: DemoAgentRequest,
+): Promise<DemoAgentResponse> {
   const inventory = body.inventory ?? [];
   const toolTrace: { name: string; summary: string }[] = [];
   let session: AgentSession = body.session ?? { ...DEFAULT_SESSION };
@@ -129,7 +148,7 @@ export function runDemoAgent(body: DemoAgentRequest): DemoAgentResponse {
   }
 
   if (body.confirmAction === "approve") {
-    const { session: s1, result } = executeAgentTool(
+    const { session: s1, result } = await executeAgentTool(
       "update_inventory",
       {
         request_id: session.requestId,

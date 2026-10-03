@@ -53,6 +53,9 @@ Use SSH or HTTPS with a personal access token / `gh auth login` if push is rejec
    - `OPENROUTER_MODEL=deepseek/deepseek-chat` — or another model id
    - `NEXT_PUBLIC_APP_URL` — your Railway HTTPS URL
    - `OPENROUTER_HTTP_REFERER` — same URL (OpenRouter attribution)
+   - `AGENTMAIL_API_KEY` — optional; enables real RFQ email (rotate if ever exposed)
+   - `MRBILL_RFQ_TO_EMAIL` — optional; sends all RFQs to your inbox for judge-safe demos
+   - Register webhook: `https://mrbill-production.up.railway.app/api/webhooks/agentmail` (`message.received`)
 
 4. Redeploy after env changes. Check `GET /api/health` on the public URL.
 
@@ -109,6 +112,18 @@ npm run build
 **Reset between takes:** use **Reset demo data** in the app header (clears browser session and reloads).
 
 `GET /api/agent/config` — `liveAgent: false` means keyless demo mode; with keys, live chat uses the same five tools with demo fallback on failure.
+
+---
+
+## 4b. AgentMail RFQ email (optional)
+
+1. Add `AGENTMAIL_API_KEY` to `.env.local` (see [`.env.example`](../.env.example)) — **never commit** the key.
+2. Optional `MRBILL_RFQ_TO_EMAIL=you@example.com` so all supplier RFQs land in your inbox; subjects include `[Supplier: Cairo Dairy Co.]` etc.
+3. Confirm send on `/app/orders/new` → open active order → RFQ panel shows **AgentMail · Sent · message id**.
+4. Reply from your mail client (or paste on `/app/quotes`) → **Sync supplier replies** on the order detail page.
+5. Production inbound: webhook URL above on Railway.
+
+Rotate the AgentMail key if it was shared in chat or committed by mistake.
 
 ---
 

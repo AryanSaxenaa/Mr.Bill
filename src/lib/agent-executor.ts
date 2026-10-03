@@ -16,6 +16,8 @@ import {
   type LineItem,
 } from "./mock-data";
 import type { AgentSession } from "./agent-session";
+import { hasAgentMailConfig } from "./agentmail";
+import { deliverRfqEmail } from "./rfq-email";
 
 export type ToolName =
   | "send_rfq"
@@ -57,12 +59,12 @@ function parseLineItems(raw: unknown): LineItem[] {
     .filter((x): x is LineItem => x !== null);
 }
 
-export function executeAgentTool(
+export async function executeAgentTool(
   name: ToolName,
   args: Record<string, unknown>,
   session: AgentSession,
   inventorySnapshot: { branchId: string; sku: string; qty: number }[],
-): { session: AgentSession; result: ToolCallResult } {
+): Promise<{ session: AgentSession; result: ToolCallResult }> {
   const next: AgentSession = { ...session, quoteIds: [...session.quoteIds] };
 
   switch (name) {
@@ -95,31 +97,54 @@ export function executeAgentTool(
         deliveryBranch,
         neededBy,
       });
+
+      const agentMailEnabled = hasAgentMailConfig();
+      const emailDeliveries = [];
+      for (const msg of output.messages) {
+        const delivery = await deliverRfqEmail({
+          supplierId: msg.supplierId,
+          rfqId: output.rfqId,
+          requestId,
+          text: msg.body,
+        });
+        emailDeliveries.push(delivery);
+      }
+
+      output.emailDeliveries = emailDeliveries;
+      output.agentMailEnabled = agentMailEnabled;
+
       next.rfqId = output.rfqId;
       next.rfqMessages = output.messages;
+      next.rfqEmailDeliveries = emailDeliveries;
       next.status = "rfq_sent";
 
       const autoParsed: ToolCallResult[] = [];
-      for (const supplierId of supplierIds) {
-        const raw =
-          MOCK_QUOTE_REPLIES[supplierId] ??
-          `Mock quote from ${supplierId} (auto-generated for demo).`;
-        const parsed = parseQuoteReply({
-          rfqId: output.rfqId,
-          supplierId,
-          rawText: raw,
-        });
-        if (!next.quoteIds.includes(parsed.quoteId)) {
-          next.quoteIds.push(parsed.quoteId);
+      if (!agentMailEnabled) {
+        for (const supplierId of supplierIds) {
+          const raw =
+            MOCK_QUOTE_REPLIES[supplierId] ??
+            `Mock quote from ${supplierId} (auto-generated for demo).`;
+          const parsed = parseQuoteReply({
+            rfqId: output.rfqId,
+            supplierId,
+            rawText: raw,
+          });
+          if (!next.quoteIds.includes(parsed.quoteId)) {
+            next.quoteIds.push(parsed.quoteId);
+          }
+          autoParsed.push({
+            name: "parse_quote_reply",
+            input: { supplier_id: supplierId, auto: true },
+            output: parsed,
+            summary: `Auto-parsed mock reply from ${supplierId} → ${parsed.quoteId}`,
+          });
         }
-        autoParsed.push({
-          name: "parse_quote_reply",
-          input: { supplier_id: supplierId, auto: true },
-          output: parsed,
-          summary: `Auto-parsed mock reply from ${supplierId} → ${parsed.quoteId}`,
-        });
+        next.status = "quotes_ready";
       }
-      next.status = "quotes_ready";
+
+      const deliveryNote = agentMailEnabled
+        ? `AgentMail sent to ${emailDeliveries.map((d) => d.to).join(", ")}. Sync supplier replies when quotes arrive.`
+        : `Mock supplier replies parsed.`;
 
       return {
         session: next,
@@ -127,7 +152,7 @@ export function executeAgentTool(
           name,
           input: args,
           output: { ...output, autoParsed },
-          summary: `RFQ ${output.rfqId} sent (simulated) to ${supplierIds.join(", ")}. Mock supplier replies parsed.`,
+          summary: `RFQ ${output.rfqId} sent to ${supplierIds.join(", ")}. ${deliveryNote}`,
         },
       };
     }

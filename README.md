@@ -90,7 +90,23 @@ DEEPSEEK_MODEL=deepseek-chat
 
 **Demo mode (no key):** `GET /api/agent/config` reports `liveAgent: false`. Chat runs the scripted Layla intake → confirm → RFQ → compare → recommend path via `src/lib/demo-agent.ts` and the same five tools in `src/lib/agent-tools.ts`.
 
-**Live mode (with key):** The agent uses an OpenAI-compatible chat completions + tools loop in `src/lib/llm-client.ts` (provider from env). Tools run through `src/lib/agent-executor.ts`. Supplier delivery stays mocked in `src/lib/mock-data.ts` for reliable demos.
+**Live mode (with key):** The agent uses an OpenAI-compatible chat completions + tools loop in `src/lib/llm-client.ts` (provider from env). Tools run through `src/lib/agent-executor.ts`.
+
+### AgentMail (real RFQ email)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AGENTMAIL_API_KEY` | No | When set, `send_rfq` delivers real email via [AgentMail](https://agentmail.to). Without it, RFQs stay simulated with instant mock replies. |
+| `AGENTMAIL_INBOX_ID` | No | Reuse an inbox; otherwise one is created with `clientId` `mrbill-procurement-v1` on first send. |
+| `MRBILL_RFQ_TO_EMAIL` | No | **Hackathon-safe:** all RFQs go to this address; subject prefix `[Supplier: …]` keeps supplier context. |
+
+**Production webhook URL** (register in AgentMail console):
+
+`https://mrbill-production.up.railway.app/api/webhooks/agentmail`
+
+On the order desk (`/app/orders/ORD-2026-0142`), use **Sync supplier replies** after suppliers email back. Inbound messages are also accepted at `POST /api/webhooks/agentmail` (`message.received`).
+
+If an API key was ever pasted in chat or committed, **rotate it** in the AgentMail console and update Railway Variables / `.env.local`.
 
 ## Architecture
 

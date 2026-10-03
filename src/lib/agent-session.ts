@@ -8,6 +8,15 @@ export interface AgentSession {
   deliveryBranch: string;
   rfqId?: string;
   rfqMessages?: { supplierId: string; body: string }[];
+  rfqEmailDeliveries?: {
+    supplierId: string;
+    to: string;
+    subject: string;
+    messageId: string;
+    inboxId: string;
+    from: string;
+    mode: "agentmail" | "simulated";
+  }[];
   quoteIds: string[];
   comparisonId?: string;
   recommendation?: RecommendOutput;
