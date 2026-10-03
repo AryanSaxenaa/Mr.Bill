@@ -148,12 +148,14 @@ Full checklist: **[docs/SUBMISSION.md](./docs/SUBMISSION.md)** · Slide copy: **
 
 | Time | Route | Action |
 |------|--------|--------|
-| 0:00 | `/` | Landing - five-step story, Maison Layla |
-| 0:30 | `/app/orders/new` | **Run demo script** → confirm line items → **Send RFQs** |
+| 0:00 | `/` | Landing - five-step story, Maison Layla. **Take a tour** (Shepherd) auto-starts once; **Replay tour** is in the nav and app header |
+| 0:30 | `/app/orders/new` | Follow the tour or click **Run demo script** → confirm line items → **Send RFQs** |
 | 1:30 | `/app/quotes` | Comparison matrix · **Paste supplier reply** (optional) |
 | 2:00 | `/app/orders/ORD-2026-0142` | **Approve & update inventory** |
 | 2:30 | `/app/inventory` | Branch stock + audit (localStorage) |
 | 3:00 | `/app/orders` | Pipeline status + below-par SKUs |
+
+The guided tour walks landing → order desk → Run demo script → line items / Find suppliers → Send RFQs → quote desk → approve → inventory. **Skip tour** is on every step. After the first visit, use **Replay tour** (landing nav or app header). On small screens the tour is four steps.
 
 **Reset between takes:** **Reset demo data** in the app header (toast confirms).
 
