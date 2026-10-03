@@ -59,6 +59,15 @@ expect_status "GET /app/request" GET "/app/request" "200"
 expect_status "GET /app/quotes" GET "/app/quotes" "200"
 expect_status "GET /app/inventory" GET "/app/inventory" "200"
 
+expect_status "GET /api/health" GET "/api/health" "200"
+
+HEALTH=$(curl -s "$BASE/api/health")
+if echo "$HEALTH" | grep -q '"ok":true' && echo "$HEALTH" | grep -q '"version"'; then
+  pass "GET /api/health body (ok + version)"
+else
+  fail "GET /api/health body (expected ok:true and version)"
+fi
+
 expect_status "GET /api/agent/config" GET "/api/agent/config" "200"
 
 expect_status "POST /api/agent invalid JSON" POST "/api/agent" "400" 'not json'

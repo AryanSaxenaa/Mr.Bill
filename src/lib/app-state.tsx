@@ -24,6 +24,13 @@ const AUDIT_KEY = "mrbill-audit-v1";
 const SESSION_KEY = "mrbill-session-v1";
 const REQUEST_STATUS_KEY = "mrbill-request-status-v1";
 
+export const APP_STORAGE_KEYS = [
+  INVENTORY_KEY,
+  AUDIT_KEY,
+  SESSION_KEY,
+  REQUEST_STATUS_KEY,
+] as const;
+
 export type RequestFlowStatus =
   | "idle"
   | "confirmed"
@@ -43,6 +50,7 @@ interface AppStateValue {
   setRequestStatus: (s: RequestFlowStatus) => void;
   applyInventoryApproval: (approvedBy: string) => void;
   applyInventoryDeltas: (deltas: InventoryDelta[], approvedBy: string) => void;
+  resetDemoData: () => void;
 }
 
 const AppStateContext = createContext<AppStateValue | null>(null);
@@ -146,6 +154,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const resetDemoData = useCallback(() => {
+    for (const key of APP_STORAGE_KEYS) {
+      localStorage.removeItem(key);
+    }
+    window.location.reload();
+  }, []);
+
   const applyInventoryApproval = useCallback(
     (approvedBy: string) => {
       applyInventoryDeltas(
@@ -194,6 +209,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setRequestStatus,
       applyInventoryApproval,
       applyInventoryDeltas,
+      resetDemoData,
     }),
     [
       branchFilter,
@@ -206,6 +222,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setRequestStatus,
       applyInventoryApproval,
       applyInventoryDeltas,
+      resetDemoData,
     ],
   );
 

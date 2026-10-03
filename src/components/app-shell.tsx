@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -29,7 +30,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { branchFilter, setBranchFilter } = useAppState();
+  const { branchFilter, setBranchFilter, resetDemoData } = useAppState();
 
   return (
     <div className="flex min-h-screen bg-cream">
@@ -76,7 +77,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p className="text-sm text-cocoa">
             Procurement on autopilot for your cafés
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-oat bg-cream text-cocoa hover:bg-oat/40"
+              onClick={resetDemoData}
+            >
+              Reset demo data
+            </Button>
             <span className="text-xs text-cocoa">Branch</span>
             <Select
               value={branchFilter}

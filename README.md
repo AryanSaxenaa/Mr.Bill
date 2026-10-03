@@ -20,9 +20,14 @@ Open-source procurement agent for food & beverage SMEs — multi-branch café re
 
 ### Submission checklist
 
+Full Untap / judge guide: **[docs/SUBMISSION.md](./docs/SUBMISSION.md)**
+
 - [ ] Record judge run (table below) including **Paste supplier reply** on `/app/quotes`
-- [ ] Submit repository URL
-- [ ] Confirm `npm run build` and `npm run test:api` pass locally
+- [ ] Submit repository URL on Untap (Professional track)
+- [x] `npm run build` and `npm run test:api` (CI + local; no API key required)
+- [x] `GET /api/health` → `{ ok: true, version }` for ops
+- [x] **Reset demo data** in the app shell (clears localStorage + reload)
+- [x] Impact copy in [docs/impact-slides.md](./docs/impact-slides.md)
 - [ ] Do not commit `.env.local` or API keys
 
 ## Judge run (under 5 minutes)
@@ -130,7 +135,7 @@ Shared app state lives in `src/lib/app-state.tsx` so **Dashboard**, **Quotes**, 
 | `npm run build` | Production build |
 | `npm run start` | Production server on 3847 |
 | `npm run lint` | ESLint |
-| `npm run test:api` | Smoke-test pages + `/api/agent` (server must be running on 3847) |
+| `npm run test:api` | Smoke-test pages + `/api/health` + `/api/agent` (server on 3847) |
 
 ### API smoke tests
 
@@ -142,13 +147,6 @@ npm run test:api
 ```
 
 Checks HTTP status for all app routes, `GET /api/agent/config`, agent error cases (400), intake message, and `confirmAction: send_rfq`. When OpenRouter returns an auth error, the API retries DeepSeek when `DEEPSEEK_API_KEY` is set; if both fail, intake falls back to the demo agent (`llmFallback: true`) so the API still returns 200.
-
-## Hackathon submission checklist
-
-- [ ] Record 2–3 min screen capture following the judge table above
-- [ ] Submit repo URL: `https://github.com/AryanSaxenaa/Mr.Bill`
-- [ ] Impact slides copy: see `docs/impact-slides.md` in the project Context (Untap submission)
-- [ ] Note scope: **in** chat intake, RFQ drafts, quote compare, recommendation, inventory ledger · **out** payments, freight, customs, production WhatsApp
 
 ## Push to GitHub
 
